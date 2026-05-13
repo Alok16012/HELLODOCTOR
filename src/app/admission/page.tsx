@@ -127,6 +127,9 @@ export default function AdmissionPage() {
         course: selectedCourses.join(', '),
         state: selectedState,
         college_preference: selectedColleges.join(', '),
+        fair_city: '',
+        marksheet_url: '',
+        admit_card_url: '',
         status: 'Pending',
       }])
       if (error) throw error
