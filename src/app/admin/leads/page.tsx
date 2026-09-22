@@ -5,12 +5,11 @@ import { supabase } from '@/lib/supabase'
 import AdminLayout from '@/components/admin/AdminLayout'
 
 interface Lead {
-  id: string
+  id: number
   name: string
   email: string
   phone: string
   course: string
-  city: string
   message: string
   source: string
   status: string
@@ -27,7 +26,7 @@ export default function LeadsPage() {
   const [page, setPage] = useState(0)
   const [search, setSearch] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
   const [editStatus, setEditStatus] = useState('')
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState('')
@@ -58,7 +57,14 @@ export default function LeadsPage() {
 
   useEffect(() => { fetchLeads() }, [fetchLeads])
 
-  const saveStatus = async (id: string) => {
+  const deleteLead = async (lead: Lead) => {
+    if (!confirm(`Delete lead from ${lead.name}?`)) return
+    const { error } = await supabase.from('leads').delete().eq('id', lead.id)
+    showToast(error ? 'Error: ' + error.message : 'Lead deleted')
+    if (!error) fetchLeads()
+  }
+
+  const saveStatus = async (id: number) => {
     setSaving(true)
     const { error } = await supabase.from('leads').update({ status: editStatus }).eq('id', id)
     if (!error) {
@@ -85,7 +91,7 @@ export default function LeadsPage() {
   const totalPages = Math.ceil(total / PAGE_SIZE)
 
   return (
-    <AdminLayout requiredRole="admin">
+    <AdminLayout>
       {toast && (
         <div className="fixed top-6 right-6 z-50 bg-green-600 text-white px-5 py-3 rounded-lg shadow-lg text-sm">
           {toast}
@@ -94,7 +100,7 @@ export default function LeadsPage() {
 
       <div className="space-y-5">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Enquiries (Leads)</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Leads</h2>
           <p className="text-gray-500 text-sm">{total} total enquiries</p>
         </div>
 
@@ -120,7 +126,7 @@ export default function LeadsPage() {
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Phone</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Email</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Course</th>
-                  <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">City</th>
+                  <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Message</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Source</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Status</th>
                   <th className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap">Date</th>
@@ -142,7 +148,7 @@ export default function LeadsPage() {
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{lead.phone}</td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap max-w-[160px] truncate">{lead.email || '-'}</td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{lead.course || '-'}</td>
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{lead.city || '-'}</td>
+                    <td className="px-4 py-3 text-gray-600 min-w-[220px] max-w-xs"><p className="line-clamp-2" title={lead.message}>{lead.message || '-'}</p></td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{lead.source || '-'}</td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       {editingId === lead.id ? (
@@ -172,10 +178,16 @@ export default function LeadsPage() {
                           </button>
                         </div>
                       ) : (
-                        <button onClick={() => { setEditingId(lead.id); setEditStatus(lead.status || 'new') }}
-                          className="text-xs text-blue-600 hover:text-blue-800 font-medium">
-                          Edit Status
-                        </button>
+                        <div className="flex gap-3">
+                          <button onClick={() => { setEditingId(lead.id); setEditStatus(lead.status || 'new') }}
+                            className="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                            Edit Status
+                          </button>
+                          <button onClick={() => deleteLead(lead)}
+                            className="text-xs text-red-500 hover:text-red-700 font-medium">
+                            Delete
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>

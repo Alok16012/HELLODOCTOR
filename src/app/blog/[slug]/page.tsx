@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { blogs } from "@/data/blogs";
+import { getBlogs } from "@/lib/content";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
@@ -12,7 +12,10 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
+  const blogs = await getBlogs();
   return blogs.map((b) => ({ slug: b.slug }));
 }
 
@@ -130,6 +133,7 @@ function renderMarkdown(content: string) {
 
 export default async function BlogDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const blogs = await getBlogs();
   const post = blogs.find((b) => b.slug === slug);
   if (!post) notFound();
 

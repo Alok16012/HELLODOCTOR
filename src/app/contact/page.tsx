@@ -11,24 +11,24 @@ const contactDetails = [
     icon: MapPin,
     title: "Visit Us",
     lines: [
-      "Plot C-8, Center Market, Sector 5,",
-      "Bokaro Steel City, Jharkhand 827006",
+      "Noida, Uttar Pradesh,",
+      "India",
     ],
     color: "bg-blue-50 text-blue-600",
   },
   {
     icon: Phone,
-    title: "Call Us",
-    lines: ["+91 6200513372", "+91 9973234773"],
+    title: "Call / WhatsApp",
+    lines: ["+91 92116 07005", "+91 92116 07005"],
     color: "bg-green-50 text-green-600",
-    links: ["tel:+916200513372", "tel:+919973234773"],
+    links: ["tel:+919211607005", "https://wa.me/919211607005"],
   },
   {
     icon: Mail,
     title: "Email Us",
-    lines: ["director@skyhighcareers.com", "skyhighcareerpro@gmail.com"],
+    lines: ["info@hellodoctorindia.com", "admissions@hellodoctorindia.com"],
     color: "bg-purple-50 text-purple-600",
-    links: ["mailto:director@skyhighcareers.com", "mailto:skyhighcareerpro@gmail.com"],
+    links: ["mailto:info@hellodoctorindia.com", "mailto:admissions@hellodoctorindia.com"],
   },
   {
     icon: Clock,
@@ -41,7 +41,7 @@ const contactDetails = [
 const socialLinks = [
   {
     label: "YouTube",
-    href: "https://www.youtube.com/channel/UC_7gQBXw0VEpUAEwWVuFovA",
+    href: "#",
     color: "hover:bg-red-600",
     svg: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -51,7 +51,7 @@ const socialLinks = [
   },
   {
     label: "Facebook",
-    href: "https://www.facebook.com/skyhigheducational",
+    href: "#",
     color: "hover:bg-blue-600",
     svg: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -61,7 +61,7 @@ const socialLinks = [
   },
   {
     label: "LinkedIn",
-    href: "https://www.linkedin.com/company/sky-high-educational-services-private-limited-5730bb243",
+    href: "#",
     color: "hover:bg-blue-700",
     svg: (
       <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -72,7 +72,7 @@ const socialLinks = [
   },
   {
     label: "Instagram",
-    href: "https://www.instagram.com/skyhigheducationalservices",
+    href: "#",
     color: "hover:bg-pink-600",
     svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-5 h-5">
@@ -86,24 +86,28 @@ const socialLinks = [
 
 const faqs = [
   {
-    q: "What courses do you provide counselling for?",
-    a: "We provide expert counselling for Engineering (JEE), Medical (NEET), MBA (CAT/MAT), Law (CLAT), Design (NID/NIFT), B.Sc, B.Com, Agriculture, and many more streams.",
+    q: "What services does Hello Doctor provide?",
+    a: "We provide end-to-end NEET counselling and MBBS admission guidance — college/university selection, documentation, application filing, and travel & visa support for students seeking MBBS in India or abroad.",
+  },
+  {
+    q: "Which countries can I pursue MBBS in through Hello Doctor?",
+    a: "We guide students for MBBS admission in India as well as popular abroad destinations including Russia, Georgia, Uzbekistan, Kyrgyzstan, and Nepal, along with BDS, BAMS and BHMS admissions in India.",
+  },
+  {
+    q: "Is NEET qualification required for MBBS abroad?",
+    a: "Yes. As per NMC guidelines, a qualifying NEET UG score is mandatory for any Indian student pursuing MBBS abroad. Our counsellors will guide you on eligibility before you apply.",
   },
   {
     q: "Is your counselling service free?",
-    a: "We offer a free initial consultation. Detailed one-on-one counselling packages are available at nominal charges. Contact us to learn about our current plans.",
+    a: "We offer a free initial consultation to understand your NEET score, budget, and preferences. Contact us to learn about our detailed counselling and application support plans.",
   },
   {
-    q: "Do you help with scholarship applications?",
-    a: "Yes! Our team actively helps students identify, apply, and follow up on central and state government scholarships as well as private scholarships worth crores annually.",
-  },
-  {
-    q: "Can students outside Bokaro avail your services?",
-    a: "Absolutely. We serve students across India through phone, WhatsApp, and video counselling. We have partner centres in 50+ cities.",
+    q: "Can students outside Noida avail your services?",
+    a: "Absolutely. We serve students across India through phone, WhatsApp, and video counselling, regardless of where you are based.",
   },
   {
     q: "How soon can I get an appointment?",
-    a: "Walk-in appointments are welcome during office hours. For telephonic/video sessions, call or WhatsApp us and we'll schedule within 24 hours.",
+    a: "Walk-in appointments are welcome during office hours. For phone or video sessions, call or WhatsApp us and we'll get back to you within 24 hours.",
   },
 ]
 
@@ -154,10 +158,10 @@ export default function ContactPage() {
             </div>
             <h1 className="text-4xl md:text-5xl font-black mb-4">
               Get in Touch with<br />
-              <span className="text-blue-300">SKYHIGH</span>
+              <span className="text-blue-300">Hello Doctor</span>
             </h1>
             <p className="text-blue-200 text-lg max-w-2xl mx-auto">
-              Have questions about college admissions, scholarships, or career counselling?
+              Have questions about MBBS admission in India or abroad, NEET counselling, or scholarships?
               Our expert team is ready to guide you every step of the way.
             </p>
           </div>
@@ -199,10 +203,10 @@ export default function ContactPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Find Our Office</h2>
               <div className="w-full h-72 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl flex flex-col items-center justify-center border border-blue-100 mb-6">
                 <MapPin className="w-10 h-10 text-blue-500 mb-3" />
-                <p className="text-gray-700 font-semibold text-center">Plot C-8, Center Market</p>
-                <p className="text-gray-500 text-sm text-center">Sector 5, Bokaro Steel City</p>
-                <p className="text-gray-500 text-sm text-center">Jharkhand 827006</p>
-                <a href="https://maps.google.com/?q=Bokaro+Steel+City+Sector+5+Center+Market"
+                <p className="text-gray-700 font-semibold text-center">Hello Doctor</p>
+                <p className="text-gray-500 text-sm text-center">Noida, Uttar Pradesh</p>
+                <p className="text-gray-500 text-sm text-center">India</p>
+                <a href="https://maps.google.com/?q=Noida+Uttar+Pradesh"
                   target="_blank" rel="noopener noreferrer"
                   className="mt-4 text-sm text-blue-600 hover:underline font-medium">
                   Open in Google Maps →
@@ -268,15 +272,15 @@ export default function ContactPage() {
                     <select value={form.course}
                       onChange={e => setForm(p => ({ ...p, course: e.target.value }))}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition text-gray-700 bg-white">
-                      <option value="">Select a stream / service</option>
-                      <option>Engineering (JEE)</option>
-                      <option>Medical (NEET)</option>
-                      <option>MBA (CAT / MAT)</option>
-                      <option>Law (CLAT)</option>
-                      <option>Design (NID / NIFT)</option>
-                      <option>B.Sc / B.Com / Arts</option>
+                      <option value="">Select a course / service</option>
+                      <option>MBBS in India</option>
+                      <option>MBBS Abroad</option>
+                      <option>BDS</option>
+                      <option>BAMS</option>
+                      <option>BHMS</option>
+                      <option>Nursing</option>
+                      <option>NEET Counselling</option>
                       <option>Scholarship Guidance</option>
-                      <option>Study Abroad</option>
                       <option>Other</option>
                     </select>
                   </div>
@@ -336,12 +340,12 @@ export default function ContactPage() {
             Book a free counselling call today. Our experts are available 7 days a week to help you find the right college and career path.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="tel:+916200513372"
+            <a href="tel:+919211607005"
               className="flex items-center gap-2 bg-white text-blue-700 font-semibold px-7 py-3 rounded-xl hover:bg-blue-50 transition-colors">
               <Phone className="w-4 h-4" />
-              Call Now: +91 6200513372
+              Call Now: +91 92116 07005
             </a>
-            <a href="https://wa.me/916200513372" target="_blank" rel="noopener noreferrer"
+            <a href="https://wa.me/919211607005" target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold px-7 py-3 rounded-xl transition-colors">
               <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />

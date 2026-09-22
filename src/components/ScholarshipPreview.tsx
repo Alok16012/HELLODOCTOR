@@ -1,8 +1,6 @@
 import Link from "next/link";
-import { scholarships } from "@/data/scholarships";
+import type { Scholarship } from "@/data/scholarships";
 import { ArrowRight, Award, IndianRupee, Users } from "lucide-react";
-
-const featured = scholarships.filter((s) => s.featured).slice(0, 3);
 
 const providerColors: Record<string, string> = {
   Government: "bg-blue-50 text-blue-700 border-blue-100",
@@ -18,7 +16,8 @@ const bgGradients: Record<string, string> = {
   International: "from-orange-500 to-orange-600",
 };
 
-export default function ScholarshipPreview() {
+export default function ScholarshipPreview({ scholarships }: { scholarships: Scholarship[] }) {
+  const featured = scholarships.filter((s) => s.featured).slice(0, 3);
   return (
     <section className="py-16 px-4 bg-gray-50">
       <div className="max-w-7xl mx-auto">
@@ -32,7 +31,7 @@ export default function ScholarshipPreview() {
             <h2 className="text-2xl sm:text-3xl font-black text-gray-900">
               Fund Your Education
             </h2>
-            <p className="text-gray-500 mt-1 text-sm">Discover scholarships worth crores — for every stream, income group & category</p>
+            <p className="text-gray-500 mt-1 text-sm">Discover scholarships for medical and other streams — across income groups & categories</p>
           </div>
           <Link
             href="/scholarship"
@@ -99,10 +98,10 @@ export default function ScholarshipPreview() {
         {/* Stats strip */}
         <div className="mt-10 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 grid grid-cols-2 sm:grid-cols-4 gap-4 text-white text-center">
           {[
-            { value: "20+", label: "Scholarships Listed" },
-            { value: "₹100 Cr+", label: "Facilitated Annually" },
-            { value: "50,000+", label: "Students Helped" },
-            { value: "Free", label: "Guidance from SKYHIGH" },
+            { value: `${scholarships.length}+`, label: "Scholarships Listed" },
+            { value: "Govt. & Private", label: "Both Covered" },
+            { value: "Any Stream", label: "Including Medical" },
+            { value: "Free", label: "Guidance from Hello Doctor" },
           ].map((s) => (
             <div key={s.label}>
               <div className="text-xl font-black">{s.value}</div>

@@ -7,16 +7,21 @@ import BlogPreview from "@/components/BlogPreview";
 import StatsSection from "@/components/StatsSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
+import { getBlogs, getColleges, getScholarships } from "@/lib/content";
 
-export default function HomePage() {
+export const revalidate = 3600;
+
+export default async function HomePage() {
+  const [colleges, blogs, scholarships] = await Promise.all([getColleges(), getBlogs(), getScholarships()]);
+
   return (
     <main>
       <Navbar />
       <HeroSection />
-      <StreamSection />
-      <FeaturedColleges />
-      <ScholarshipPreview />
-      <BlogPreview />
+      <StreamSection colleges={colleges} />
+      <FeaturedColleges colleges={colleges} />
+      <ScholarshipPreview scholarships={scholarships} />
+      <BlogPreview blogs={blogs} />
       <StatsSection />
       <CTASection />
       <Footer />

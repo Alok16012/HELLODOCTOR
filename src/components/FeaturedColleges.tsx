@@ -3,11 +3,11 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import CollegeCard from "./CollegeCard";
-import { colleges } from "@/data/colleges";
+import type { College } from "@/data/colleges";
 
-const filterTabs = ["All", "Engineering", "Medical", "Management", "Law", "Design"];
+const filterTabs = ["All", "MBBS India", "MBBS Abroad", "BDS", "BAMS", "BHMS"];
 
-export default function FeaturedColleges() {
+export default function FeaturedColleges({ colleges }: { colleges: College[] }) {
   const [activeTab, setActiveTab] = useState("All");
 
   const filtered =
@@ -21,9 +21,9 @@ export default function FeaturedColleges() {
         {/* Header */}
         <div className="flex items-end justify-between mb-8">
           <div>
-            <p className="text-blue-600 text-sm font-semibold uppercase tracking-wider mb-2">Top Colleges</p>
-            <h2 className="text-3xl font-bold text-gray-900">Featured Colleges Across India</h2>
-            <p className="text-gray-500 mt-2">Handpicked colleges with best placements and academic excellence</p>
+            <p className="text-blue-600 text-sm font-semibold uppercase tracking-wider mb-2">Top Picks</p>
+            <h2 className="text-3xl font-bold text-gray-900">Featured Medical Colleges &amp; Universities</h2>
+            <p className="text-gray-500 mt-2">Handpicked options in India and abroad, shortlisted by our counsellors</p>
           </div>
           <Link href="/colleges" className="hidden sm:flex items-center gap-1 text-blue-600 text-sm font-medium hover:gap-2 transition-all">
             View All <ArrowRight className="w-4 h-4" />

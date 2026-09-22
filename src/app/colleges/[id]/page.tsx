@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { colleges } from "@/data/colleges";
+import { getColleges } from "@/lib/content";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CollegeCard from "@/components/CollegeCard";
@@ -15,12 +15,16 @@ interface PageProps {
   params: Promise<{ id: string }>;
 }
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
+  const colleges = await getColleges();
   return colleges.map((c) => ({ id: String(c.id) }));
 }
 
 export default async function CollegeDetailPage({ params }: PageProps) {
   const { id } = await params;
+  const colleges = await getColleges();
   const college = colleges.find((c) => c.id === Number(id));
   if (!college) notFound();
 
@@ -38,8 +42,8 @@ export default async function CollegeDetailPage({ params }: PageProps) {
 
   const quickStats = [
     { icon: <IndianRupee className="w-4 h-4" />, label: "Annual Fees", value: college.feesDisplay, color: "text-blue-600" },
-    { icon: <TrendingUp className="w-4 h-4" />, label: "Avg Package", value: formatPkg(college.placements.avgPackage), color: "text-green-600" },
-    { icon: <TrendingUp className="w-4 h-4" />, label: "Highest Pkg", value: formatPkg(college.placements.highestPackage), color: "text-purple-600" },
+    { icon: <TrendingUp className="w-4 h-4" />, label: "Avg Starting Salary", value: formatPkg(college.placements.avgPackage), color: "text-green-600" },
+    { icon: <TrendingUp className="w-4 h-4" />, label: "Senior Specialist Salary", value: formatPkg(college.placements.highestPackage), color: "text-purple-600" },
     { icon: <Users className="w-4 h-4" />, label: "Reviews", value: college.reviewCount.toLocaleString(), color: "text-gray-700" },
     { icon: <Calendar className="w-4 h-4" />, label: "Established", value: String(college.established), color: "text-gray-700" },
     { icon: <Shield className="w-4 h-4" />, label: "Accreditation", value: college.accreditation, color: "text-emerald-600" },
@@ -134,24 +138,24 @@ export default async function CollegeDetailPage({ params }: PageProps) {
               {/* Placements */}
               <div className="bg-white rounded-2xl p-6 border border-gray-100">
                 <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-green-600" /> Placement Statistics 2024
+                  <TrendingUp className="w-5 h-5 text-green-600" /> Career Outlook (Indicative)
                 </h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-5">
                   <div className="bg-green-50 border border-green-100 rounded-xl p-4 text-center">
-                    <p className="text-xs text-gray-500 mb-1">Average Package</p>
+                    <p className="text-xs text-gray-500 mb-1">Avg Starting Salary</p>
                     <p className="text-2xl font-bold text-green-600">{formatPkg(college.placements.avgPackage)}</p>
                   </div>
                   <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-center">
-                    <p className="text-xs text-gray-500 mb-1">Highest Package</p>
+                    <p className="text-xs text-gray-500 mb-1">Senior Specialist Salary</p>
                     <p className="text-2xl font-bold text-blue-600">{formatPkg(college.placements.highestPackage)}</p>
                   </div>
                   <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 text-center col-span-2 sm:col-span-1">
-                    <p className="text-xs text-gray-500 mb-1">Top Recruiters</p>
+                    <p className="text-xs text-gray-500 mb-1">Partner Hospitals</p>
                     <p className="text-2xl font-bold text-purple-600">{college.placements.companies.length}+</p>
                   </div>
                 </div>
                 <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2">
-                  <Briefcase className="w-4 h-4 text-gray-500" /> Top Recruiting Companies
+                  <Briefcase className="w-4 h-4 text-gray-500" /> Internship &amp; Residency Hospitals
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {college.placements.companies.map((co) => (

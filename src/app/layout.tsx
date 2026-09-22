@@ -13,12 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SKYHIGH Educational Services - Find Your Dream College in India",
-  description: "India's most trusted educational consultancy since 2010. College admissions, scholarship guidance, career counselling for Engineering, Medical, MBA, Law & more. 50,000+ students guided.",
-  icons: {
-    icon: "/logo_new.jpg",
-    apple: "/logo_new.jpg",
-  },
+  title: "Hello Doctor - MBBS Admission Consultancy in India & Abroad",
+  description: "Noida-based MBBS admission consultancy. Expert NEET counselling and guidance for MBBS admission in India and abroad (Russia, Georgia, Uzbekistan, Kyrgyzstan, Nepal). Call/WhatsApp +91 92116 07005.",
 };
 
 export default function RootLayout({

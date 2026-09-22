@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { scholarships } from "@/data/scholarships";
+import { getScholarships } from "@/lib/content";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
@@ -14,7 +14,10 @@ interface PageProps {
   params: Promise<{ slug: string }>;
 }
 
+export const revalidate = 3600;
+
 export async function generateStaticParams() {
+  const scholarships = await getScholarships();
   return scholarships.map((s) => ({ slug: s.slug }));
 }
 
@@ -48,6 +51,7 @@ const providerText: Record<string, string> = {
 
 export default async function ScholarshipDetailPage({ params }: PageProps) {
   const { slug } = await params;
+  const scholarships = await getScholarships();
   const scholarship = scholarships.find((s) => s.slug === slug);
   if (!scholarship) notFound();
 

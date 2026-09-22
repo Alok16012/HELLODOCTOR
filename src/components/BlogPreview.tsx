@@ -1,11 +1,10 @@
 import Link from "next/link";
 import Image from "next/image";
-import { blogs } from "@/data/blogs";
+import type { BlogPost } from "@/data/blogs";
 import { ArrowRight, Clock, BookOpen } from "lucide-react";
 
-const featured = blogs.filter((b) => b.featured).slice(0, 3);
-
-export default function BlogPreview() {
+export default function BlogPreview({ blogs }: { blogs: BlogPost[] }) {
+  const featured = blogs.filter((b) => b.featured).slice(0, 3);
   return (
     <section className="py-16 px-4 bg-white">
       <div className="max-w-7xl mx-auto">

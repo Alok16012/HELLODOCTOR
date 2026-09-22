@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { colleges, streams } from "@/data/colleges";
+import { streams } from "@/data/colleges";
+import { getColleges } from "@/lib/content";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
@@ -16,109 +17,72 @@ const streamDetails: Record<string, {
   gradient: string;
   heroImage: string;
 }> = {
-  Engineering: {
-    slug: "engineering",
-    description: "Engineering programs equip students with technical and analytical skills to design, build, and innovate. From software to civil, engineering graduates are in high demand across all industries.",
-    topExams: ["JEE Advanced", "JEE Main", "BITSAT", "VITEEE", "KCET", "MHT-CET"],
-    careerPaths: ["Software Engineer", "Civil Engineer", "Mechanical Engineer", "Data Scientist", "Product Manager"],
-    avgSalary: "₹6–12 LPA",
-    duration: "4 Years (B.Tech/B.E.)",
-    gradient: "from-blue-600 to-indigo-700",
-    heroImage: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=1200&q=80",
-  },
-  Medical: {
-    slug: "medical",
-    description: "Medical programs train future doctors, surgeons, and healthcare professionals. MBBS and related programs are among the most respected degrees in India.",
-    topExams: ["NEET UG", "AIIMS Entrance", "JIPMER"],
-    careerPaths: ["Doctor (MBBS)", "Surgeon", "General Physician", "Specialist", "Medical Researcher"],
-    avgSalary: "₹8–25 LPA",
+  "MBBS India": {
+    slug: "mbbs-india",
+    description: "MBBS in India through NEET UG counselling — government, private and deemed medical colleges. India's most recognised and preferred path to becoming a doctor.",
+    topExams: ["NEET UG"],
+    careerPaths: ["General Physician", "Surgeon", "Specialist Doctor", "Medical Officer", "Postgraduate (MD/MS)"],
+    avgSalary: "₹6–15 LPA (starting)",
     duration: "5.5 Years (MBBS with Internship)",
-    gradient: "from-red-500 to-rose-600",
+    gradient: "from-blue-600 to-indigo-700",
     heroImage: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=1200&q=80",
   },
-  Management: {
-    slug: "management",
-    description: "Management programs develop future business leaders and entrepreneurs. MBA from top IIMs can transform your career trajectory with access to India's top companies.",
-    topExams: ["CAT", "XAT", "MAT", "GMAT", "CMAT", "SNAP"],
-    careerPaths: ["Business Analyst", "Marketing Manager", "Finance Manager", "Consultant", "Entrepreneur"],
-    avgSalary: "₹8–35 LPA",
-    duration: "2 Years (MBA) / 5 Years (BBA+MBA)",
-    gradient: "from-yellow-500 to-orange-600",
-    heroImage: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=1200&q=80",
+  "MBBS Abroad": {
+    slug: "mbbs-abroad",
+    description: "MBBS abroad at WHO-listed universities in Russia, Georgia, Uzbekistan, Kyrgyzstan and Nepal — direct admission for NEET-qualified students at a comparatively lower cost.",
+    topExams: ["NEET UG"],
+    careerPaths: ["General Physician (after FMGE/NExT)", "Postgraduate Studies", "Clinical Practice Abroad"],
+    avgSalary: "₹5–14 LPA (post-licensure, indicative)",
+    duration: "5.5–6 Years (MBBS, incl. internship)",
+    gradient: "from-red-500 to-rose-600",
+    heroImage: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=1200&q=80",
   },
-  Law: {
-    slug: "law",
-    description: "Law programs prepare students for careers in litigation, corporate law, judiciary, and policy. Top NLUs produce some of India's finest legal minds.",
-    topExams: ["CLAT", "AILET", "LSAT India", "SLAT", "MH CET Law"],
-    careerPaths: ["Corporate Lawyer", "Litigator", "Judge", "Legal Consultant", "Policy Analyst"],
-    avgSalary: "₹6–25 LPA",
-    duration: "5 Years (BA/BBA-LLB) / 3 Years (LLB)",
+  BDS: {
+    slug: "bds",
+    description: "Bachelor of Dental Surgery (BDS) programs in India through NEET UG counselling — a strong path into dentistry and oral healthcare.",
+    topExams: ["NEET UG"],
+    careerPaths: ["Dentist", "Oral Surgeon", "Orthodontist", "Dental Clinic Owner", "Postgraduate (MDS)"],
+    avgSalary: "₹3.5–9 LPA (starting)",
+    duration: "5 Years (BDS with Internship)",
     gradient: "from-purple-600 to-violet-700",
-    heroImage: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=1200&q=80",
+    heroImage: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?w=1200&q=80",
   },
-  Design: {
-    slug: "design",
-    description: "Design programs nurture creative professionals for careers in product design, fashion, communication design, and UX. NID and NIFT are India's top design schools.",
-    topExams: ["NID DAT", "NIFT Entrance", "CEED", "UCEED", "Pearl Academy"],
-    careerPaths: ["Product Designer", "UX Designer", "Fashion Designer", "Graphic Designer", "Art Director"],
-    avgSalary: "₹5–18 LPA",
-    duration: "4 Years (B.Des)",
-    gradient: "from-pink-500 to-rose-600",
-    heroImage: "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=1200&q=80",
-  },
-  Science: {
-    slug: "science",
-    description: "Pure science programs at IISc, IISERs, and top universities open paths to research, academia, and high-tech industries. B.Sc + M.Sc route is highly valued.",
-    topExams: ["CUET", "IISER Aptitude Test", "IISc Entrance", "JEST", "TIFR GS"],
-    careerPaths: ["Research Scientist", "Data Analyst", "Academician", "DRDO Scientist", "Biotech Researcher"],
-    avgSalary: "₹5–15 LPA",
-    duration: "3 Years (B.Sc) / 5 Years (B.S.)",
-    gradient: "from-green-500 to-emerald-600",
-    heroImage: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=1200&q=80",
-  },
-  Pharmacy: {
-    slug: "pharmacy",
-    description: "Pharmacy programs produce professionals for India's ₹4 lakh crore pharma industry. From production to research, pharmacy graduates are in demand globally.",
-    topExams: ["GPAT", "NEET (some states)", "State Pharmacy CETs"],
-    careerPaths: ["Pharmacist", "Drug Inspector", "QC Analyst", "Medical Representative", "R&D Scientist"],
-    avgSalary: "₹3–10 LPA",
-    duration: "4 Years (B.Pharma) / 2 Years (D.Pharma)",
-    gradient: "from-teal-500 to-cyan-600",
-    heroImage: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=1200&q=80",
-  },
-  Agriculture: {
-    slug: "agriculture",
-    description: "Agriculture programs train experts for one of India's largest sectors. From agritech startups to ICAR research, agriculture offers diverse career paths.",
-    topExams: ["ICAR AIEEA", "CUET", "State Agriculture Entrance"],
-    careerPaths: ["Agricultural Scientist", "Agritech Entrepreneur", "Farm Manager", "Food Technologist", "NABARD Officer"],
-    avgSalary: "₹4–12 LPA",
-    duration: "4 Years (B.Sc Agriculture)",
-    gradient: "from-orange-500 to-amber-600",
-    heroImage: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1200&q=80",
-  },
-  Architecture: {
-    slug: "architecture",
-    description: "Architecture programs blend creativity and technical skills to design the built environment. B.Arch graduates work in construction, urban planning, and interior design.",
-    topExams: ["NATA", "JEE Paper 2 (B.Arch)", "CEPT Entrance"],
-    careerPaths: ["Architect", "Urban Planner", "Interior Designer", "Project Manager", "BIM Specialist"],
-    avgSalary: "₹4–15 LPA",
-    duration: "5 Years (B.Arch)",
+  BAMS: {
+    slug: "bams",
+    description: "Bachelor of Ayurvedic Medicine and Surgery (BAMS) — a NEET UG based program for students interested in traditional and integrative medicine.",
+    topExams: ["NEET UG"],
+    careerPaths: ["Ayurvedic Physician", "Panchakarma Specialist", "Wellness Consultant", "Postgraduate (MD Ayurveda)"],
+    avgSalary: "₹3–7 LPA (starting)",
+    duration: "5.5 Years (BAMS with Internship)",
     gradient: "from-indigo-500 to-blue-700",
-    heroImage: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=1200&q=80",
+    heroImage: "https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?w=1200&q=80",
   },
-  Research: {
-    slug: "research",
-    description: "Research programs at IITs, IISc, and IISERs produce world-class scientists and innovators. Integrated PhD and BS-MS programs are the gold standard for research careers.",
-    topExams: ["GATE", "JEST", "CSIR NET", "UGC NET", "TIFR GS"],
-    careerPaths: ["Research Scientist", "Professor", "DRDO/ISRO Scientist", "Industrial R&D", "Postdoctoral Researcher"],
-    avgSalary: "₹6–20 LPA",
-    duration: "2 Years (M.Sc) + 5 Years (Ph.D)",
+  BHMS: {
+    slug: "bhms",
+    description: "Bachelor of Homeopathic Medicine and Surgery (BHMS) — a NEET UG based program for aspiring homeopathic practitioners.",
+    topExams: ["NEET UG"],
+    careerPaths: ["Homeopathic Physician", "Clinic Owner", "Research Associate", "Postgraduate (MD Homeopathy)"],
+    avgSalary: "₹3–7 LPA (starting)",
+    duration: "5.5 Years (BHMS with Internship)",
+    gradient: "from-pink-500 to-rose-600",
+    heroImage: "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?w=1200&q=80",
+  },
+  Nursing: {
+    slug: "nursing",
+    description: "B.Sc Nursing and GNM programs preparing students for a stable, in-demand healthcare career in India and abroad.",
+    topExams: ["NEET UG", "State Nursing Entrance"],
+    careerPaths: ["Staff Nurse", "ICU/OT Nurse", "Nurse Educator", "Nurse Practitioner (with further study)"],
+    avgSalary: "₹2.5–6 LPA (starting)",
+    duration: "4 Years (B.Sc Nursing) / 3 Years (GNM)",
     gradient: "from-cyan-500 to-teal-600",
-    heroImage: "https://images.unsplash.com/photo-1532094349884-543559373b42?w=1200&q=80",
+    heroImage: "https://images.unsplash.com/photo-1584515933487-779824d29309?w=1200&q=80",
   },
 };
 
-export default function StreamsPage() {
+export const revalidate = 3600;
+
+export default async function StreamsPage() {
+  const colleges = await getColleges();
   return (
     <>
       <Navbar />
@@ -128,18 +92,18 @@ export default function StreamsPage() {
           <div className="max-w-7xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-white/15 text-white text-sm font-medium px-4 py-2 rounded-full mb-5">
               <BookOpen className="w-4 h-4" />
-              10 Academic Streams
+              MBBS &amp; Medical Programs
             </div>
             <h1 className="text-3xl sm:text-5xl font-bold text-white mb-4">
-              Explore Academic Streams
+              Explore Medical Programs
             </h1>
             <p className="text-blue-100 text-lg max-w-2xl mx-auto">
-              Discover the right stream for your career goals. Compare entrance exams, career paths, and top colleges across all major academic disciplines.
+              Compare MBBS options in India and abroad, along with BDS, BAMS, BHMS and Nursing — entrance exams, career paths and top colleges.
             </p>
             <div className="flex flex-wrap justify-center gap-4 mt-8 text-white/80 text-sm">
-              <div className="flex items-center gap-1.5"><Building2 className="w-4 h-4" /> 88+ Top Colleges</div>
-              <div className="flex items-center gap-1.5"><GraduationCap className="w-4 h-4" /> 10 Streams</div>
-              <div className="flex items-center gap-1.5"><Users className="w-4 h-4" /> 1L+ Students Guided</div>
+              <div className="flex items-center gap-1.5"><Building2 className="w-4 h-4" /> 28+ Colleges &amp; Universities</div>
+              <div className="flex items-center gap-1.5"><GraduationCap className="w-4 h-4" /> 6 Countries</div>
+              <div className="flex items-center gap-1.5"><Users className="w-4 h-4" /> Free NEET Counselling</div>
             </div>
           </div>
         </div>
@@ -232,10 +196,10 @@ export default function StreamsPage() {
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
               {[
-                { label: "Academic Streams", value: "10+" },
-                { label: "Top Colleges Listed", value: "88+" },
-                { label: "Entrance Exams Covered", value: "20+" },
-                { label: "Career Paths Mapped", value: "50+" },
+                { label: "Medical Programs", value: "10" },
+                { label: "Colleges & Universities Listed", value: "28+" },
+                { label: "Countries Covered", value: "6" },
+                { label: "Career Paths Mapped", value: "20+" },
               ].map((stat) => (
                 <div key={stat.label}>
                   <p className="text-3xl font-bold text-white">{stat.value}</p>
@@ -303,12 +267,12 @@ export default function StreamsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
           <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 sm:p-12 text-center">
             <TrendingUp className="w-12 h-12 text-white/80 mx-auto mb-4" />
-            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">Not Sure Which Stream to Choose?</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">Not Sure Which Option to Choose?</h2>
             <p className="text-blue-100 mb-6 max-w-xl mx-auto">
-              Talk to our expert counsellors for free. We help you match your interests and strengths to the right stream and college.
+              Talk to our NEET counsellors for free. We help you match your NEET score and budget to the right medical college.
             </p>
             <Link
-              href="/counselling"
+              href="/contact"
               className="inline-flex items-center gap-2 bg-white text-blue-600 font-bold px-8 py-3.5 rounded-xl hover:bg-blue-50 transition-colors"
             >
               Book Free Counselling Session
