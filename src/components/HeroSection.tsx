@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Caveat } from "next/font/google";
-import { GraduationCap, Globe2, ShieldCheck, ArrowRight } from "lucide-react";
+import { GraduationCap, BookOpen, Globe2, ShieldCheck } from "lucide-react";
 
 const caveat = Caveat({ subsets: ["latin"], weight: ["600", "700"] });
 
@@ -84,12 +84,23 @@ export default function HeroSection() {
           ))}
         </div>
 
-        <Link
-          href="/streams"
-          className="self-start inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-7 py-3.5 rounded-xl shadow-lg shadow-blue-200 transition-colors"
-        >
-          Explore Programs <ArrowRight className="w-4 h-4" />
-        </Link>
+        {/* CTA Buttons */}
+        <div className="flex flex-wrap gap-3">
+          <Link
+            href="/streams?tab=ug"
+            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-blue-200 transition-colors"
+          >
+            <GraduationCap className="w-5 h-5" />
+            NEET UG
+          </Link>
+          <Link
+            href="/streams?tab=pg"
+            className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-blue-600 font-bold px-6 py-3 rounded-xl shadow-md border border-gray-200 transition-colors"
+          >
+            <BookOpen className="w-5 h-5" />
+            NEET PG
+          </Link>
+        </div>
       </div>
     </section>
   );

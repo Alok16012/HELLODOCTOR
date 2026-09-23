@@ -13,71 +13,94 @@ const navLinks = [
   { label: "Contact", href: "/contact" },
 ];
 
+const statItems = [
+  { label: "NEET-Based Admission", value: "100%" },
+  { label: "Initial Counselling", value: "Free" },
+  { label: "Support Availability", value: "7 Days" },
+  { label: "Medical Programs", value: "5" },
+];
+
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5">
-            <Image
-              src="/logo.jpeg"
-              alt="Hello Doctor"
-              width={60}
-              height={60}
-              className="object-contain rounded-lg"
-              priority
-            />
-            <div className="flex flex-col leading-none">
-              <span className="text-lg font-black text-[#1e3a6e] tracking-wide">Hello Doctor</span>
-              <span className="text-[10px] font-semibold text-blue-600 tracking-tight">MBBS Admission Consultancy</span>
-            </div>
-          </Link>
-
-          {/* Desktop Links */}
-          <div className="hidden lg:flex items-center gap-6">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="hidden lg:flex items-center gap-3">
-            <a
-              href="tel:+919211607005"
-              className="flex items-center gap-1.5 text-sm text-blue-600 border border-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium"
-            >
-              <Phone className="w-4 h-4" />
-              <span className="flex flex-col leading-none">
-                <span>Counselling</span>
-                <span className="text-[10px] font-normal text-blue-500">+91 9211607005</span>
-              </span>
-            </a>
-            <Link
-              href="/admin/login"
-              className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              Login
+    <>
+      <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link href="/" className="flex items-center gap-2.5">
+              <Image
+                src="/logo.jpeg"
+                alt="Hello Doctor"
+                width={60}
+                height={60}
+                className="object-contain rounded-lg"
+                priority
+              />
+              <div className="flex flex-col leading-none">
+                <span className="text-lg font-black text-[#1e3a6e] tracking-wide">Hello Doctor</span>
+                <span className="text-[10px] font-semibold text-blue-600 tracking-tight">MBBS Admission Consultancy</span>
+              </div>
             </Link>
-          </div>
 
-          {/* Mobile Menu Toggle */}
-          <button
-            className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </button>
+            {/* Desktop Links */}
+            <div className="hidden lg:flex items-center gap-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="hidden lg:flex items-center gap-3">
+              <a
+                href="tel:+919211607005"
+                className="flex items-center gap-1.5 text-sm text-blue-600 border border-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+              >
+                <Phone className="w-4 h-4" />
+                <span className="flex flex-col leading-none">
+                  <span>Counselling</span>
+                  <span className="text-[10px] font-normal text-blue-500">+91 9211607005</span>
+                </span>
+              </a>
+              <Link
+                href="/admin/login"
+                className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Login
+              </Link>
+            </div>
+
+            {/* Mobile Menu Toggle */}
+            <button
+              className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+              onClick={() => setIsOpen(!isOpen)}
+            >
+              {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
-      </div>
+
+        {/* Stats Bar */}
+        <div className="bg-blue-600">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="flex items-center justify-center gap-6 sm:gap-10 py-2.5 text-white">
+              {statItems.map((item) => (
+                <div key={item.label} className="text-center">
+                  <div className="text-sm sm:text-base font-bold leading-tight">{item.value}</div>
+                  <div className="text-[10px] sm:text-xs text-blue-200 leading-tight">{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </nav>
 
       {/* Mobile Menu */}
       {isOpen && (
@@ -111,6 +134,6 @@ export default function Navbar() {
           </div>
         </div>
       )}
-    </nav>
+    </>
   );
 }

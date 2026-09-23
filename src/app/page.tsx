@@ -4,7 +4,6 @@ import StreamSection from "@/components/StreamSection";
 import FeaturedColleges from "@/components/FeaturedColleges";
 import ScholarshipPreview from "@/components/ScholarshipPreview";
 import BlogPreview from "@/components/BlogPreview";
-import StatsSection from "@/components/StatsSection";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 import { getBlogs, getColleges, getScholarships } from "@/lib/content";
@@ -22,7 +21,6 @@ export default async function HomePage() {
       <FeaturedColleges colleges={colleges} />
       <ScholarshipPreview scholarships={scholarships} />
       <BlogPreview blogs={blogs} />
-      <StatsSection />
       <CTASection />
       <Footer />
     </main>
