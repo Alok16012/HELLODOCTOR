@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Phone } from "lucide-react";
+import { Menu, X, Phone, TrendingUp } from "lucide-react";
 
 const navLinks = [
   { label: "Colleges", href: "/colleges" },
@@ -59,6 +59,13 @@ export default function Navbar() {
 
             {/* CTA Buttons */}
             <div className="hidden lg:flex items-center gap-3">
+              <Link
+                href="/predictor"
+                className="bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-lg shadow-md shadow-red-200 transition-colors text-sm flex items-center gap-1.5"
+              >
+                <TrendingUp className="w-4 h-4" />
+                NEET Predictor
+              </Link>
               <a
                 href="tel:+919211607005"
                 className="flex items-center gap-1.5 text-sm text-blue-600 border border-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium"
@@ -116,6 +123,14 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="pt-2 flex flex-col gap-2">
+            <Link
+              href="/predictor"
+              className="flex items-center justify-center gap-2 text-sm bg-red-600 text-white px-4 py-2.5 rounded-lg font-bold shadow-md"
+              onClick={() => setIsOpen(false)}
+            >
+              <TrendingUp className="w-4 h-4" />
+              NEET Predictor
+            </Link>
             <a
               href="tel:+919211607005"
               className="flex items-center justify-center gap-2 text-sm text-blue-600 border border-blue-600 px-4 py-2 rounded-lg font-medium"
