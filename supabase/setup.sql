@@ -104,7 +104,7 @@ create table if not exists scholarships (
 );
 
 -- ─────────────── Enquiries (contact form) ───────────────
-create table if not exists leads (
+create table if not exists enquiries (
   id bigserial primary key,
   name text not null,
   phone text not null,
@@ -121,7 +121,7 @@ create table if not exists leads (
 alter table colleges enable row level security;
 alter table blogs enable row level security;
 alter table scholarships enable row level security;
-alter table leads enable row level security;
+alter table enquiries enable row level security;
 
 -- Content: anyone can read, only admins can write.
 do $$
@@ -136,10 +136,10 @@ begin
 end $$;
 
 -- Enquiries: anyone can submit, only admins can view / update / delete.
-drop policy if exists "public submit" on leads;
-create policy "public submit" on leads for insert with check (true);
-drop policy if exists "admin manage" on leads;
-create policy "admin manage" on leads for all to authenticated using (is_admin()) with check (is_admin());
+drop policy if exists "public submit" on enquiries;
+create policy "public submit" on enquiries for insert with check (true);
+drop policy if exists "admin manage" on enquiries;
+create policy "admin manage" on enquiries for all to authenticated using (is_admin()) with check (is_admin());
 
 -- ─────────────── Image uploads ───────────────
 insert into storage.buckets (id, name, public) values ('images', 'images', true)
