@@ -1,5 +1,5 @@
 -- ════════════════════════════════════════════════════════════
--- WhatsApp automation (Meta Cloud API + Claude bot)
+-- WhatsApp automation (Baileys bridge + rule-based replies)
 -- Run once in Supabase SQL editor after crm_setup.sql.
 -- ════════════════════════════════════════════════════════════
 
@@ -24,7 +24,7 @@ create table if not exists whatsapp_messages (
 );
 create index if not exists idx_whatsapp_messages_wa_id on whatsapp_messages(wa_id, created_at desc);
 
--- Server (service role) writes; CRM staff can read and pause/resume the bot.
+-- Website API (service role) writes; CRM staff can read and pause/resume the bot.
 alter table whatsapp_contacts enable row level security;
 alter table whatsapp_messages enable row level security;
 
