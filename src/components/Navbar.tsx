@@ -46,7 +46,7 @@ export default function Navbar() {
                 priority
               />
               <div className="flex flex-col leading-none">
-                <span className="text-lg font-black text-[#1e3a6e] tracking-wide">Hello Doctor</span>
+                <span className="text-lg font-black text-blue-900 tracking-wide">Hello Doctor</span>
                 <span className="text-[10px] font-semibold text-blue-600 tracking-tight">MBBS Admission Consultancy</span>
               </div>
             </Link>
@@ -170,7 +170,7 @@ export default function Navbar() {
           >
             <div className="flex items-start justify-between mb-5">
               <div>
-                <h2 className="text-xl font-black text-[#1e3a6e]">Login</h2>
+                <h2 className="text-xl font-black text-blue-900">Login</h2>
                 <p className="text-sm text-gray-500 mt-0.5">Choose how you want to sign in</p>
               </div>
               <button

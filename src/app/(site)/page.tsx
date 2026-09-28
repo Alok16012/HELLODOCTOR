@@ -5,6 +5,9 @@ import FeaturedColleges from "@/components/FeaturedColleges";
 import ScholarshipPreview from "@/components/ScholarshipPreview";
 import BlogPreview from "@/components/BlogPreview";
 import CTASection from "@/components/CTASection";
+import AboutSection from "@/components/AboutSection";
+import AchievementsSection from "@/components/AchievementsSection";
+import ReviewsSection from "@/components/ReviewsSection";
 import Footer from "@/components/Footer";
 import { getBlogs, getColleges, getScholarships } from "@/lib/content";
 
@@ -18,7 +21,10 @@ export default async function HomePage() {
       <Navbar />
       <HeroSection />
       <StreamSection colleges={colleges} />
+      <AboutSection />
+      <AchievementsSection />
       <FeaturedColleges colleges={colleges} />
+      <ReviewsSection />
       <ScholarshipPreview scholarships={scholarships} />
       <BlogPreview blogs={blogs} />
       <CTASection />

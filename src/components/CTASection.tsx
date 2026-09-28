@@ -7,14 +7,14 @@ const programs = [
     icon: <GraduationCap className="w-8 h-8" />,
     title: "NEET UG",
     subtitle: "MBBS / BDS / Other UG Medical Programs",
-    href: "/streams",
+    href: "/streams?tab=ug",
     theme: "blue",
   },
   {
     icon: <BookOpen className="w-8 h-8" />,
     title: "NEET PG",
     subtitle: "MD / MS / Other PG Medical Programs",
-    href: "/streams",
+    href: "/streams?tab=pg",
     theme: "green",
   },
 ];

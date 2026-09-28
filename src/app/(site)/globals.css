@@ -12,6 +12,63 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Brand palette taken from the Hello Doctor logo: teal-blue cross + green "D".
+   The public site uses Tailwind's blue/indigo/sky/green/emerald utilities
+   throughout, so remapping them here re-themes every page at once. */
+@theme {
+  --color-blue-50: #eef8fa;
+  --color-blue-100: #d4eef3;
+  --color-blue-200: #ade0e9;
+  --color-blue-300: #77cad8;
+  --color-blue-400: #3aaac0;
+  --color-blue-500: #1a8ea6;
+  --color-blue-600: #0f7690;
+  --color-blue-700: #0e5f76;
+  --color-blue-800: #114f62;
+  --color-blue-900: #134253;
+  --color-blue-950: #0a2e3b;
+
+  --color-indigo-50: #edf6f8;
+  --color-indigo-100: #d2e9ee;
+  --color-indigo-200: #a6d2dc;
+  --color-indigo-300: #6fb3c3;
+  --color-indigo-400: #3d8ea3;
+  --color-indigo-500: #1f7189;
+  --color-indigo-600: #175c72;
+  --color-indigo-700: #144b5e;
+  --color-indigo-800: #123e4e;
+  --color-indigo-900: #103342;
+
+  --color-sky-50: #f0f9fb;
+  --color-sky-100: #dff2f6;
+  --color-sky-200: #bfe6ee;
+  --color-sky-300: #8fd3e1;
+  --color-sky-400: #52b8cc;
+  --color-sky-500: #2a9db3;
+  --color-sky-600: #1d8299;
+
+  --color-green-50: #f1f9ee;
+  --color-green-100: #dff2d9;
+  --color-green-200: #c0e5b5;
+  --color-green-300: #96d386;
+  --color-green-400: #6dbe5b;
+  --color-green-500: #4ea83d;
+  --color-green-600: #3d8f2f;
+  --color-green-700: #327228;
+  --color-green-800: #2b5b25;
+  --color-green-900: #254c21;
+
+  --color-emerald-50: #f0f9f1;
+  --color-emerald-100: #dbf1de;
+  --color-emerald-200: #b8e3be;
+  --color-emerald-300: #88cf93;
+  --color-emerald-400: #57b566;
+  --color-emerald-500: #3a9a4a;
+  --color-emerald-600: #2e7f3c;
+  --color-emerald-700: #276533;
+  --color-emerald-800: #22512b;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

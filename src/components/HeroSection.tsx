@@ -1,107 +1,131 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Caveat } from "next/font/google";
-import { GraduationCap, BookOpen, Globe2, ShieldCheck } from "lucide-react";
+import { GraduationCap, ChevronRight } from "lucide-react";
 
-const caveat = Caveat({ subsets: ["latin"], weight: ["600", "700"] });
-
-const features = [
-  { icon: <GraduationCap className="w-5 h-5" />, label: "Top Ranked Universities" },
-  { icon: <Globe2 className="w-5 h-5" />, label: "Expert Counselling" },
-  { icon: <ShieldCheck className="w-5 h-5" />, label: "100% Genuine Guidance" },
+const paths = [
+  {
+    label: "NEET UG",
+    href: "/streams?tab=ug",
+    className:
+      "from-lime-500 via-green-600 to-green-700 shadow-green-600/30 hover:shadow-green-600/40",
+  },
+  {
+    label: "NEET PG",
+    href: "/streams?tab=pg",
+    className:
+      "from-blue-500 via-blue-600 to-blue-800 shadow-blue-600/30 hover:shadow-blue-600/40",
+  },
 ];
+
+function Plus({ className }: { className: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={`absolute pointer-events-none ${className}`} fill="currentColor" aria-hidden>
+      <path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z" />
+    </svg>
+  );
+}
+
+function Dots({ className }: { className: string }) {
+  return (
+    <div
+      className={`absolute pointer-events-none grid grid-cols-5 gap-2.5 ${className}`}
+      aria-hidden
+    >
+      {Array.from({ length: 25 }).map((_, i) => (
+        <span key={i} className="w-1.5 h-1.5 rounded-full bg-current" />
+      ))}
+    </div>
+  );
+}
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden lg:h-[clamp(480px,36vw,640px)]">
+    <section className="relative overflow-hidden bg-sky-50 min-h-[560px] lg:min-h-[clamp(580px,44vw,720px)]">
       {/* Background image */}
-      <Image
-        src="/hero.png"
-        alt="Medical student ready for MBBS"
-        fill
-        className="object-cover object-[75%_center] lg:object-[70%_30%]"
-        priority
-        sizes="100vw"
-      />
-      {/* Light wash on the left so text stays readable over the sky */}
-      <div className="absolute inset-0 bg-gradient-to-r from-white/85 via-white/55 via-45% to-transparent to-75% lg:from-blue-50/90 lg:via-blue-50/50 lg:via-40% lg:to-transparent lg:to-60%" />
-
-      {/* Handwritten decorative text */}
-      <div
-        className={`${caveat.className} hidden lg:block absolute top-[10%] left-[55%] text-blue-700 text-4xl xl:text-5xl leading-[1.05] -rotate-12 select-none [text-shadow:0_1px_10px_rgba(255,255,255,0.9)]`}
-      >
-        <div>Better</div>
-        <div className="pl-2">Education</div>
-        <div className="pl-7">Brighter</div>
-        <div className="pl-14">Future</div>
-        <svg viewBox="0 0 200 30" className="ml-10 -mt-1 w-40 h-6" fill="none">
-          <path d="M4 24 C 60 10, 120 6, 196 4" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-        </svg>
-      </div>
-
-      {/* Plane + dotted trail */}
-      <svg
-        viewBox="0 0 160 120"
-        className="hidden lg:block absolute top-[6%] right-[10%] w-28 h-24 text-blue-500 overflow-visible"
-        fill="none"
-      >
-        <path
-          d="M10 110 C 50 90, 70 60, 110 20"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeDasharray="5 6"
-          strokeLinecap="round"
+      <div className="absolute inset-y-0 right-0 w-full lg:w-[68%]">
+        <Image
+          src="/hero-bg.png"
+          alt="Medical college campus"
+          fill
+          priority
+          sizes="(max-width: 1024px) 100vw, 68vw"
+          className="object-cover object-[70%_40%]"
         />
-        <g transform="translate(100,10) rotate(40)">
-          <path d="M0 8 L18 0 L0 -8 L4 0 Z" fill="currentColor" />
-        </g>
-      </svg>
+        <div className="hidden lg:block absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-white to-transparent" />
+      </div>
+      {/* Wash on the left so the headline stays readable */}
+      <div className="absolute inset-0 bg-gradient-to-r from-white via-white/85 via-40% to-white/10 lg:from-white lg:via-white/80 lg:via-35% lg:to-transparent lg:to-65%" />
+      <div className="absolute inset-0 bg-gradient-to-b from-sky-100/40 via-transparent to-transparent" />
+
+      {/* Decorations */}
+      <Plus className="top-6 left-6 w-14 h-14 text-sky-200/70" />
+      <Plus className="hidden lg:block top-[22%] right-[20%] w-16 h-16 text-sky-300/50" />
+      <Plus className="hidden lg:block top-[48%] left-[58%] w-12 h-12 text-sky-300/50" />
+      <Dots className="hidden md:grid top-6 right-6 text-sky-300/70" />
+      <Dots className="hidden md:grid top-[34%] left-2 text-sky-200" />
 
       {/* Content */}
-      <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 py-14 lg:py-0 flex flex-col justify-center">
-        <div className="self-start inline-flex items-center bg-blue-100/80 text-blue-700 px-4 py-1.5 rounded-2xl sm:rounded-full text-xs font-bold tracking-wide uppercase mb-5 max-w-[16rem] sm:max-w-none">
-          Your Global Medical Career Starts Here
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-40 sm:pt-16 lg:pt-20 lg:pb-52">
+        <div className="inline-flex items-center rounded-full border-2 border-green-400/70 bg-white/80 backdrop-blur px-5 sm:px-8 py-1.5 sm:py-2 shadow-sm">
+          <span className="text-2xl sm:text-4xl lg:text-[2.75rem] font-extrabold tracking-tight text-blue-950">
+            Get <span className="text-blue-800">Admission</span> on the
+          </span>
         </div>
 
-        <h1 className="text-[1.75rem] sm:text-5xl lg:text-[2rem] xl:text-[2.5rem] font-black leading-[1.15] text-gray-900 mb-4 max-w-[20rem] sm:max-w-none lg:whitespace-nowrap">
-          Explore <br className="lg:hidden" />
-          <span className="text-blue-600">MBBS &amp; Medical Programs</span>
+        <h1 className="mt-3 text-[3.25rem] leading-none sm:text-7xl lg:text-[6.5rem] font-black tracking-tight">
+          <span className="text-blue-950">Medical </span>
+          <span className="bg-gradient-to-r from-green-600 via-green-600 to-emerald-700 bg-clip-text text-transparent">
+            Path
+          </span>
         </h1>
+        <div className="mt-3 h-1.5 w-40 rounded-full bg-gradient-to-r from-green-600 to-blue-700" />
 
-        <p className="text-sm sm:text-lg text-gray-600 mb-7 lg:mb-8 max-w-[16rem] sm:max-w-none">
-          Find the right medical college or university — in India or abroad
+        <p className="mt-5 text-lg sm:text-2xl text-gray-700 leading-snug max-w-xl">
+          Expert guidance for <strong className="font-bold text-green-700">NEET UG</strong>{" "}
+          <strong className="font-bold text-green-700">&amp;</strong>{" "}
+          <strong className="font-bold text-blue-700">NEET PG</strong> admission in top medical colleges across
+          India.
         </p>
 
-        {/* Feature row */}
-        <div className="grid grid-cols-3 gap-3 max-w-sm sm:max-w-md lg:flex lg:max-w-none lg:gap-x-8 lg:gap-y-4 mb-7 lg:mb-9">
-          {features.map((f) => (
-            <div key={f.label} className="flex flex-col items-start gap-2 lg:flex-row lg:items-center lg:gap-2.5">
-              <div className="w-11 h-11 lg:w-10 lg:h-10 rounded-full bg-white shadow-md lg:shadow-sm border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
-                {f.icon}
-              </div>
-              <span className="text-xs sm:text-sm font-medium text-gray-800 lg:text-gray-700 lg:max-w-[7rem] leading-snug [text-shadow:0_0_6px_rgba(255,255,255,1),0_0_2px_rgba(255,255,255,1)] lg:[text-shadow:none]">{f.label}</span>
-            </div>
+        <div className="mt-8 flex flex-col sm:flex-row gap-4 sm:gap-5">
+          {paths.map((p) => (
+            <Link
+              key={p.label}
+              href={p.href}
+              className={`group inline-flex items-center justify-between sm:justify-start gap-5 rounded-2xl bg-gradient-to-r ${p.className} px-6 sm:px-8 py-4 sm:py-5 text-white shadow-xl ring-1 ring-white/30 transition-all hover:-translate-y-0.5 sm:min-w-[19rem]`}
+            >
+              <GraduationCap className="w-9 h-9 sm:w-10 sm:h-10 shrink-0" />
+              <span className="h-10 w-px bg-white/40" />
+              <span className="flex-1 text-2xl sm:text-3xl font-extrabold tracking-tight">{p.label}</span>
+              <ChevronRight className="w-7 h-7 transition-transform group-hover:translate-x-1" />
+            </Link>
           ))}
         </div>
-
-        {/* CTA Buttons */}
-        <div className="flex flex-wrap gap-3">
-          <Link
-            href="/streams?tab=ug"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl shadow-lg shadow-blue-200 transition-colors"
-          >
-            <GraduationCap className="w-5 h-5" />
-            NEET UG
-          </Link>
-          <Link
-            href="/streams?tab=pg"
-            className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-blue-600 font-bold px-6 py-3 rounded-xl shadow-md border border-gray-200 transition-colors"
-          >
-            <BookOpen className="w-5 h-5" />
-            NEET PG
-          </Link>
-        </div>
       </div>
+
+      {/* Bottom waves */}
+      <svg
+        viewBox="0 0 1440 260"
+        preserveAspectRatio="none"
+        className="absolute bottom-0 left-0 w-full h-36 sm:h-44 lg:h-56 pointer-events-none"
+        aria-hidden
+      >
+        <defs>
+          <linearGradient id="hero-wave-green" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stopColor="#8ccf4d" />
+            <stop offset="1" stopColor="#3d8f2f" />
+          </linearGradient>
+          <linearGradient id="hero-wave-blue" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0" stopColor="#0a2e3b" />
+            <stop offset="0.6" stopColor="#0f7690" />
+            <stop offset="1" stopColor="#2a9db3" />
+          </linearGradient>
+        </defs>
+        <path d="M0 40 C 260 120, 520 200, 820 210 C 1080 218, 1280 170, 1440 110 L1440 260 L0 260 Z" fill="url(#hero-wave-green)" opacity="0.9" />
+        <path d="M0 90 C 280 170, 560 230, 860 232 C 1100 234, 1300 190, 1440 150 L1440 260 L0 260 Z" fill="url(#hero-wave-blue)" />
+        <path d="M0 170 C 320 220, 640 250, 940 248 C 1160 246, 1320 222, 1440 200 L1440 260 L0 260 Z" fill="url(#hero-wave-green)" opacity="0.85" />
+        <path d="M0 215 C 360 250, 720 262, 1040 256 C 1220 252, 1360 240, 1440 232 L1440 260 L0 260 Z" fill="#ffffff" />
+      </svg>
     </section>
   );
 }

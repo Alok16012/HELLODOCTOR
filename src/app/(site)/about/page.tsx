@@ -68,7 +68,7 @@ export default function AboutPage() {
       <div className="bg-white min-h-screen">
 
         {/* Hero */}
-        <div className="bg-gradient-to-br from-[#1e3a6e] via-blue-700 to-blue-600 py-20 px-4 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-blue-900 via-blue-700 to-blue-600 py-20 px-4 relative overflow-hidden">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-20 w-64 h-64 bg-blue-300 rounded-full blur-3xl" />

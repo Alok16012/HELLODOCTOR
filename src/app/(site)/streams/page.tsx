@@ -79,9 +79,24 @@ const streamDetails: Record<string, {
   },
 };
 
+const pgCourses = [
+  { name: "MD (Doctor of Medicine)", icon: "🩺", duration: "3 Years", exam: "NEET PG", specialties: ["General Medicine", "Paediatrics", "Radiology", "Dermatology", "Anaesthesia", "Psychiatry"], gradient: "from-blue-600 to-indigo-700" },
+  { name: "MS (Master of Surgery)", icon: "🔪", duration: "3 Years", exam: "NEET PG", specialties: ["General Surgery", "Orthopaedics", "Obstetrics & Gynaecology", "ENT", "Ophthalmology"], gradient: "from-emerald-600 to-green-700" },
+  { name: "PG Diploma", icon: "📜", duration: "2 Years", exam: "NEET PG", specialties: ["Anaesthesia (DA)", "Child Health (DCH)", "Gynaecology (DGO)", "Ophthalmology (DO)"], gradient: "from-sky-500 to-blue-700" },
+  { name: "DNB (Diplomate of National Board)", icon: "🏥", duration: "3 Years", exam: "NEET PG", specialties: ["Broad specialties at NBEMS-accredited hospitals", "Equivalent to MD/MS"], gradient: "from-indigo-500 to-violet-700" },
+  { name: "MDS (Master of Dental Surgery)", icon: "🦷", duration: "3 Years", exam: "NEET MDS", specialties: ["Orthodontics", "Prosthodontics", "Oral & Maxillofacial Surgery", "Endodontics"], gradient: "from-purple-600 to-fuchsia-700" },
+  { name: "MD / MS Ayurveda & Homeopathy", icon: "🌿", duration: "3 Years", exam: "AIAPGET", specialties: ["Kayachikitsa", "Panchakarma", "Shalya Tantra", "MD Homeopathy"], gradient: "from-lime-600 to-green-700" },
+];
+
 export const revalidate = 3600;
 
-export default async function StreamsPage() {
+export default async function StreamsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
+  const { tab: tabParam } = await searchParams;
+  const tab = tabParam === "pg" ? "pg" : "ug";
   const colleges = await getColleges();
   return (
     <>
@@ -92,14 +107,37 @@ export default async function StreamsPage() {
           <div className="max-w-7xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 bg-white/15 text-white text-sm font-medium px-4 py-2 rounded-full mb-5">
               <BookOpen className="w-4 h-4" />
-              MBBS &amp; Medical Programs
+              {tab === "pg" ? "NEET PG Programs" : "NEET UG Programs"}
             </div>
             <h1 className="text-3xl sm:text-5xl font-bold text-white mb-4">
-              Explore Medical Programs
+              {tab === "pg" ? "Explore PG Medical Courses" : "Explore UG Medical Courses"}
             </h1>
             <p className="text-blue-100 text-lg max-w-2xl mx-auto">
-              Compare MBBS options in India and abroad, along with BDS, BAMS, BHMS and Nursing — entrance exams, career paths and top colleges.
+              {tab === "pg"
+                ? "MD, MS, PG Diploma, DNB and MDS — specialties, duration and entrance exams for your postgraduate medical career."
+                : "Compare MBBS options in India and abroad, along with BDS, BAMS, BHMS and Nursing — entrance exams, career paths and top colleges."}
             </p>
+
+            {/* UG / PG switcher */}
+            <div className="inline-flex mt-8 p-1.5 rounded-2xl bg-white/15 border border-white/20">
+              {[
+                { key: "ug", label: "NEET UG" },
+                { key: "pg", label: "NEET PG" },
+              ].map((t) => (
+                <Link
+                  key={t.key}
+                  href={`/streams?tab=${t.key}`}
+                  scroll={false}
+                  className={`flex items-center gap-2 px-6 sm:px-8 py-2.5 rounded-xl text-sm sm:text-base font-bold transition-colors ${
+                    tab === t.key ? "bg-white text-blue-700 shadow" : "text-white hover:bg-white/10"
+                  }`}
+                >
+                  <GraduationCap className="w-5 h-5" />
+                  {t.label}
+                </Link>
+              ))}
+            </div>
+
             <div className="flex flex-wrap justify-center gap-4 mt-8 text-white/80 text-sm">
               <div className="flex items-center gap-1.5"><Building2 className="w-4 h-4" /> 28+ Colleges &amp; Universities</div>
               <div className="flex items-center gap-1.5"><GraduationCap className="w-4 h-4" /> 6 Countries</div>
@@ -108,6 +146,8 @@ export default async function StreamsPage() {
           </div>
         </div>
 
+        {tab === "ug" ? (
+          <>
         {/* Stream Cards */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -262,6 +302,46 @@ export default async function StreamsPage() {
             </div>
           </div>
         </div>
+          </>
+        ) : (
+          <>
+        {/* PG Courses */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pgCourses.map((course) => (
+              <Link key={course.name} href="/contact">
+                <div className="bg-white rounded-2xl border border-gray-100 hover:border-blue-200 hover:shadow-lg transition-all duration-300 overflow-hidden group h-full flex flex-col">
+                  <div className={`bg-gradient-to-br ${course.gradient} p-6`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-4xl">{course.icon}</span>
+                      <span className="bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full">
+                        {course.exam}
+                      </span>
+                    </div>
+                    <h2 className="text-xl font-bold text-white mt-3">{course.name}</h2>
+                    <p className="text-white/75 text-sm mt-1">Duration: {course.duration}</p>
+                  </div>
+                  <div className="p-5 flex flex-col flex-1">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Popular Specialties</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {course.specialties.map((sp) => (
+                        <span key={sp} className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full font-medium">
+                          {sp}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="mt-auto pt-5 flex items-center justify-between text-blue-600 text-sm font-semibold">
+                      <span>Get PG Counselling</span>
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+          </>
+        )}
 
         {/* CTA */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
