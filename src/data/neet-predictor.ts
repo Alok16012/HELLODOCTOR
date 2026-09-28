@@ -27,6 +27,22 @@ export const CATEGORY_FACTOR: Record<Category, number> = {
 export const MAX_SCORE: Record<NeetType, number> = { ug: 720, pg: 800 };
 export const TOTAL_CANDIDATES: Record<NeetType, number> = { ug: 2200000, pg: 230000 };
 
+// NEET UG qualifying marks (previous year) and roughly how many candidates qualified.
+export const UG_QUALIFYING_MARKS: Record<Category, number> = { general: 144, ews: 144, obc: 113, sc: 113, st: 113 };
+const UG_QUALIFIED_CANDIDATES = 1236000;
+
+/** false when the result is below the NEET UG qualifying cutoff (PG is not checked). */
+export function isUgQualified(mode: "score" | "rank", value: number, category: Category): boolean {
+  return mode === "score" ? value >= UG_QUALIFYING_MARKS[category] : value <= UG_QUALIFIED_CANDIDATES;
+}
+
+// An estimate shouldn't look more precise than it is.
+function roundRank(rank: number): number {
+  if (rank < 100) return rank;
+  const step = rank < 1000 ? 10 : rank < 10000 ? 100 : 1000;
+  return Math.round(rank / step) * step;
+}
+
 // [marks, approx. AIR] — descending marks. Linear interpolation in between.
 const MARKS_TO_RANK: Record<NeetType, [number, number][]> = {
   ug: [
@@ -50,7 +66,7 @@ export function estimateRank(type: NeetType, marks: number): number {
     const [loM, loR] = table[i + 1];
     if (m <= hiM && m >= loM) {
       if (hiM === loM) return hiR;
-      return Math.max(1, Math.round(hiR + ((hiM - m) / (hiM - loM)) * (loR - hiR)));
+      return Math.max(1, roundRank(Math.round(hiR + ((hiM - m) / (hiM - loM)) * (loR - hiR))));
     }
   }
   return TOTAL_CANDIDATES[type];

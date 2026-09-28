@@ -8,7 +8,8 @@ import {
   TrendingUp, Award, Phone, ArrowLeft, ArrowRight, Loader2, ExternalLink, Building2, Info, RotateCcw,
 } from "lucide-react";
 import {
-  CATEGORIES, MAX_SCORE, TOTAL_CANDIDATES, estimateRank, predictUgColleges, pgBandFor, ugAlternatives,
+  CATEGORIES, MAX_SCORE, TOTAL_CANDIDATES, UG_QUALIFYING_MARKS, estimateRank, isUgQualified, predictUgColleges,
+  pgBandFor, ugAlternatives,
   type Category, type Chance, type CollegeMatch, type NeetType, type PgBand,
 } from "@/data/neet-predictor";
 
@@ -22,6 +23,7 @@ interface NewsLink {
 }
 
 interface Prediction {
+  qualified: boolean;
   rank: number;
   rankIsEstimate: boolean;
   colleges: CollegeMatch[];
@@ -37,6 +39,14 @@ const chanceStyle: Record<Chance, string> = {
 
 const fmt = (n: number) => n.toLocaleString("en-IN");
 
+// Store Indian numbers as 10 digits (matches the rest of the CRM), whatever the user typed.
+function normalizeMobile(input: string): string {
+  const d = input.replace(/\D/g, "");
+  if (d.length === 12 && d.startsWith("91")) return d.slice(2);
+  if (d.length === 11 && d.startsWith("0")) return d.slice(1);
+  return d;
+}
+
 export default function PredictorPage() {
   const [step, setStep] = useState<Step>(1);
   const [type, setType] = useState<NeetType>("ug");
@@ -50,15 +60,16 @@ export default function PredictorPage() {
   const [news, setNews] = useState<NewsLink[]>([]);
   const [newsLoading, setNewsLoading] = useState(false);
 
-  const mobileDigits = mobile.replace(/\D/g, "");
+  const mobileDigits = normalizeMobile(mobile);
   const num = Number(value);
   const max = mode === "score" ? MAX_SCORE[type] : TOTAL_CANDIDATES[type];
   const valueValid = value !== "" && Number.isFinite(num) && num >= (mode === "score" ? 0 : 1) && num <= max;
 
   const saveLead = (p: Prediction) => {
     const categoryLabel = CATEGORIES.find((c) => c.value === category)?.label;
-    const summary =
-      type === "ug"
+    const summary = !p.qualified
+      ? `${mode === "score" ? `Score ${num}/720` : `AIR ${fmt(num)}`}, ${categoryLabel} — below NEET UG qualifying cutoff.`
+      : type === "ug"
         ? `${mode === "score" ? `Score ${num}/720, ` : ""}AIR ${p.rankIsEstimate ? "~" : ""}${fmt(p.rank)}, ${categoryLabel}. ` +
           `${p.colleges.length} AIQ colleges matched${p.colleges[0] ? ` (e.g. ${p.colleges[0].name})` : ""}.`
         : `${mode === "score" ? `Score ${num}/800, ` : ""}AIR ${p.rankIsEstimate ? "~" : ""}${fmt(p.rank)}, ${categoryLabel}. ${p.pgBand?.title}.`;
@@ -102,12 +113,14 @@ export default function PredictorPage() {
     if (!valueValid) return;
     const rankIsEstimate = mode === "score";
     const rank = rankIsEstimate ? estimateRank(type, num) : Math.round(num);
+    const qualified = type === "pg" || isUgQualified(mode, num, category);
     const p: Prediction = {
+      qualified,
       rank,
       rankIsEstimate,
-      colleges: type === "ug" ? predictUgColleges(rank, category, includeDeemed) : [],
+      colleges: type === "ug" && qualified ? predictUgColleges(rank, category, includeDeemed) : [],
       pgBand: type === "pg" ? pgBandFor(rank, category) : null,
-      alternatives: type === "ug" ? ugAlternatives(rank, category) : [],
+      alternatives: type === "ug" && qualified ? ugAlternatives(rank, category) : [],
     };
     setPrediction(p);
     setStep(3);
@@ -208,7 +221,7 @@ export default function PredictorPage() {
                 </div>
                 <button
                   onClick={() => setStep(2)}
-                  disabled={!name.trim() || mobileDigits.length < 10}
+                  disabled={!name.trim() || mobileDigits.length !== 10}
                   className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-200 text-base"
                 >
                   Continue
@@ -349,8 +362,22 @@ export default function PredictorPage() {
                 )}
               </div>
 
+              {!prediction.qualified && (
+                <div className="bg-rose-50 border-2 border-rose-200 rounded-2xl p-5 mb-6">
+                  <h3 className="font-bold text-gray-900 mb-1">This result is below the NEET UG qualifying cutoff</h3>
+                  <p className="text-sm text-gray-700 mb-3">
+                    Last year&apos;s qualifying marks were {UG_QUALIFYING_MARKS.general} for General/EWS and{" "}
+                    {UG_QUALIFYING_MARKS.obc} for OBC/SC/ST. MBBS, BDS, AYUSH and MBBS abroad all need a qualifying NEET score.
+                  </p>
+                  <ul className="space-y-1.5 text-sm text-gray-700 list-disc pl-5">
+                    <li>Prepare for the next NEET attempt — our counsellors can suggest a plan</li>
+                    <li>B.Sc Nursing, Physiotherapy or allied health courses that admit without NEET in many states</li>
+                  </ul>
+                </div>
+              )}
+
               {/* UG colleges */}
-              {type === "ug" && (
+              {type === "ug" && prediction.qualified && (
                 <>
                   {prediction.colleges.length > 0 ? (
                     <div className="space-y-6 mb-6">

@@ -2,7 +2,7 @@ import type { College } from "@/data/colleges";
 import type { Scholarship } from "@/data/scholarships";
 import { pgCourses } from "@/data/pg-courses";
 import {
-  CATEGORIES, MAX_SCORE, estimateRank, pgBandFor, predictUgColleges, ugAlternatives,
+  CATEGORIES, MAX_SCORE, UG_QUALIFYING_MARKS, estimateRank, isUgQualified, pgBandFor, predictUgColleges, ugAlternatives,
   type Category, type NeetType,
 } from "@/data/neet-predictor";
 
@@ -189,6 +189,17 @@ function prediction(p: NonNullable<ReturnType<typeof parsePrediction>>): BotRepl
   if (p.type === "pg") {
     const band = pgBandFor(rank, p.category);
     return { text: head + `\n*${band.title}*\nBranches: ${band.branches}\nKahan: ${band.where}\n` + foot };
+  }
+
+  if (!isUgQualified(p.mode, p.value, p.category)) {
+    return {
+      text:
+        head +
+        `\nYe result NEET UG qualifying cutoff se neeche lag raha hai (pichhle saal: General/EWS ${UG_QUALIFYING_MARKS.general}, OBC/SC/ST ${UG_QUALIFYING_MARKS.obc} marks).\n` +
+        "MBBS/BDS/AYUSH aur MBBS abroad ke liye NEET qualify zaroori hai.\n" +
+        "- Agle NEET attempt ki planning\n- B.Sc Nursing / allied health courses (kai states mein bina NEET)\n" +
+        "Counsellor se baat karne ke liye *counsellor* likhiye.",
+    };
   }
 
   const matches = predictUgColleges(rank, p.category, true);
