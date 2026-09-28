@@ -74,10 +74,12 @@ export function estimateRank(type: NeetType, marks: number): number {
 
 export interface UgCollege {
   name: string;
+  /** Course this closing rank is for. Omitted = MBBS. */
+  course?: "MBBS" | "BDS";
   city: string;
   state: string;
   type: "Government" | "Deemed";
-  /** Approx. previous-year AIQ MBBS closing rank, General category. */
+  /** Approx. previous-year AIQ closing rank for the course, General category. */
   closingRank: number;
   /** Approx. annual tuition fee. */
   fee: string;
@@ -139,6 +141,15 @@ export const UG_COLLEGES: UgCollege[] = [
   { name: "Datta Meghe Institute (JNMC) Wardha", city: "Wardha", state: "Maharashtra", type: "Deemed", closingRank: 90000, fee: "₹16,00,000/yr" },
   { name: "Santosh Medical College Ghaziabad", city: "Ghaziabad", state: "Uttar Pradesh", type: "Deemed", closingRank: 120000, fee: "₹23,00,000/yr" },
   { name: "Other Deemed Universities (stray rounds)", city: "Various", state: "Various", type: "Deemed", closingRank: 150000, fee: "₹15–30 L/yr" },
+  // Government dental colleges (BDS, AIQ 15%)
+  { name: "Maulana Azad Institute of Dental Sciences", course: "BDS", city: "New Delhi", state: "Delhi", type: "Government", closingRank: 6000, fee: "₹15,000/yr" },
+  { name: "Government Dental College Mumbai", course: "BDS", city: "Mumbai", state: "Maharashtra", type: "Government", closingRank: 12000, fee: "₹90,000/yr" },
+  { name: "Government Dental College Nagpur", course: "BDS", city: "Nagpur", state: "Maharashtra", type: "Government", closingRank: 18000, fee: "₹90,000/yr" },
+  { name: "King George's Medical University (Dental)", course: "BDS", city: "Lucknow", state: "Uttar Pradesh", type: "Government", closingRank: 14000, fee: "₹54,000/yr" },
+  { name: "Government Dental College Ahmedabad", course: "BDS", city: "Ahmedabad", state: "Gujarat", type: "Government", closingRank: 22000, fee: "₹25,000/yr" },
+  { name: "Punjab Government Dental College Amritsar", course: "BDS", city: "Amritsar", state: "Punjab", type: "Government", closingRank: 28000, fee: "₹90,000/yr" },
+  { name: "Government Dental College Jaipur (RUHS)", course: "BDS", city: "Jaipur", state: "Rajasthan", type: "Government", closingRank: 30000, fee: "₹50,000/yr" },
+  { name: "Other Government Dental Colleges (AIQ)", course: "BDS", city: "Various", state: "Various", type: "Government", closingRank: 45000, fee: "Low" },
 ];
 
 export interface PgBand {
@@ -203,5 +214,160 @@ export function ugAlternatives(rank: number, category: Category): string[] {
   if (g > 60000) out.push("BDS in government dental colleges");
   if (g > 100000) out.push("BAMS / BHMS through AACCC & state AYUSH counselling");
   out.push("MBBS abroad (Russia, Georgia, Uzbekistan, Kyrgyzstan, Nepal) — NEET qualification is enough");
+  return out;
+}
+
+// ── NEET PG: college × branch prediction ─────────────────────────────────
+//
+// Branch closing ranks are modelled as: base rank of the branch at a top
+// government college × tier multiplier + tier offset. Tune the bases and tiers
+// every year from MCC PG (50% AIQ) and deemed-university allotments.
+
+export const PG_BRANCHES: { name: string; degree: "MD" | "MS"; base: number }[] = [
+  { name: "Radiology", degree: "MD", base: 300 },
+  { name: "Dermatology", degree: "MD", base: 400 },
+  { name: "General Medicine", degree: "MD", base: 600 },
+  { name: "Orthopaedics", degree: "MS", base: 1200 },
+  { name: "Paediatrics", degree: "MD", base: 1500 },
+  { name: "General Surgery", degree: "MS", base: 2000 },
+  { name: "Obstetrics & Gynaecology", degree: "MS", base: 2500 },
+  { name: "Ophthalmology", degree: "MS", base: 2500 },
+  { name: "ENT", degree: "MS", base: 3000 },
+  { name: "Psychiatry", degree: "MD", base: 3500 },
+  { name: "Anaesthesia", degree: "MD", base: 5000 },
+  { name: "Pulmonary Medicine", degree: "MD", base: 6000 },
+  { name: "Emergency Medicine", degree: "MD", base: 7000 },
+  { name: "Pathology", degree: "MD", base: 9000 },
+  { name: "Community Medicine", degree: "MD", base: 13000 },
+  { name: "Microbiology", degree: "MD", base: 14000 },
+  { name: "Pharmacology", degree: "MD", base: 15000 },
+  { name: "Forensic Medicine", degree: "MD", base: 20000 },
+  { name: "Anatomy", degree: "MD", base: 25000 },
+  { name: "Physiology", degree: "MD", base: 25000 },
+  { name: "Biochemistry", degree: "MD", base: 28000 },
+];
+
+type PgTier = "top" | "good" | "govt" | "dnb" | "deemed";
+
+const PG_TIER: Record<PgTier, { mult: number; add: number; label: string }> = {
+  top: { mult: 1, add: 0, label: "Top Government" },
+  good: { mult: 2.5, add: 0, label: "Government" },
+  govt: { mult: 5, add: 0, label: "Government" },
+  dnb: { mult: 3, add: 3000, label: "DNB Hospital" },
+  deemed: { mult: 6, add: 15000, label: "Deemed" },
+};
+
+export interface PgCollege {
+  name: string;
+  city: string;
+  state: string;
+  tier: PgTier;
+  fee: string;
+}
+
+export const PG_COLLEGES: PgCollege[] = [
+  { name: "Maulana Azad Medical College", city: "New Delhi", state: "Delhi", tier: "top", fee: "₹5,000/yr" },
+  { name: "VMMC & Safdarjung Hospital", city: "New Delhi", state: "Delhi", tier: "top", fee: "₹50,000/yr" },
+  { name: "Seth GS Medical College (KEM)", city: "Mumbai", state: "Maharashtra", tier: "top", fee: "₹1,00,000/yr" },
+  { name: "IMS BHU Varanasi", city: "Varanasi", state: "Uttar Pradesh", tier: "top", fee: "₹20,000/yr" },
+  { name: "Madras Medical College", city: "Chennai", state: "Tamil Nadu", tier: "top", fee: "₹30,000/yr" },
+  { name: "Grant Medical College Mumbai", city: "Mumbai", state: "Maharashtra", tier: "top", fee: "₹1,00,000/yr" },
+  { name: "Government Medical College Chandigarh", city: "Chandigarh", state: "Chandigarh", tier: "top", fee: "₹20,000/yr" },
+  { name: "University College of Medical Sciences", city: "New Delhi", state: "Delhi", tier: "good", fee: "₹10,000/yr" },
+  { name: "Lady Hardinge Medical College", city: "New Delhi", state: "Delhi", tier: "good", fee: "₹10,000/yr" },
+  { name: "King George's Medical University", city: "Lucknow", state: "Uttar Pradesh", tier: "good", fee: "₹75,000/yr" },
+  { name: "SMS Medical College Jaipur", city: "Jaipur", state: "Rajasthan", tier: "good", fee: "₹75,000/yr" },
+  { name: "BJ Medical College Pune", city: "Pune", state: "Maharashtra", tier: "good", fee: "₹1,00,000/yr" },
+  { name: "BJ Medical College Ahmedabad", city: "Ahmedabad", state: "Gujarat", tier: "good", fee: "₹50,000/yr" },
+  { name: "IPGMER & SSKM Kolkata", city: "Kolkata", state: "West Bengal", tier: "good", fee: "₹20,000/yr" },
+  { name: "Osmania Medical College", city: "Hyderabad", state: "Telangana", tier: "good", fee: "₹50,000/yr" },
+  { name: "Bangalore Medical College", city: "Bengaluru", state: "Karnataka", tier: "good", fee: "₹1,00,000/yr" },
+  { name: "PGIMS Rohtak", city: "Rohtak", state: "Haryana", tier: "good", fee: "₹1,00,000/yr" },
+  { name: "Government Medical College Nagpur", city: "Nagpur", state: "Maharashtra", tier: "good", fee: "₹1,00,000/yr" },
+  { name: "GSVM Medical College Kanpur", city: "Kanpur", state: "Uttar Pradesh", tier: "govt", fee: "₹75,000/yr" },
+  { name: "MLN Medical College Prayagraj", city: "Prayagraj", state: "Uttar Pradesh", tier: "govt", fee: "₹75,000/yr" },
+  { name: "SN Medical College Agra", city: "Agra", state: "Uttar Pradesh", tier: "govt", fee: "₹75,000/yr" },
+  { name: "LLRM Medical College Meerut", city: "Meerut", state: "Uttar Pradesh", tier: "govt", fee: "₹75,000/yr" },
+  { name: "RIMS Ranchi", city: "Ranchi", state: "Jharkhand", tier: "govt", fee: "₹50,000/yr" },
+  { name: "Government Medical College Kota", city: "Kota", state: "Rajasthan", tier: "govt", fee: "₹75,000/yr" },
+  { name: "Government Medical College Patiala", city: "Patiala", state: "Punjab", tier: "govt", fee: "₹1,50,000/yr" },
+  { name: "Government Doon Medical College", city: "Dehradun", state: "Uttarakhand", tier: "govt", fee: "₹1,00,000/yr" },
+  { name: "DNB — NBEMS accredited hospitals", city: "Various", state: "Various", tier: "dnb", fee: "Stipend paid" },
+  { name: "Kasturba Medical College Manipal", city: "Manipal", state: "Karnataka", tier: "deemed", fee: "₹25–45 L/yr" },
+  { name: "Sri Ramachandra Institute", city: "Chennai", state: "Tamil Nadu", tier: "deemed", fee: "₹25–40 L/yr" },
+  { name: "JSS Medical College Mysuru", city: "Mysuru", state: "Karnataka", tier: "deemed", fee: "₹15–30 L/yr" },
+  { name: "Dr. DY Patil Medical College Pune", city: "Pune", state: "Maharashtra", tier: "deemed", fee: "₹30–50 L/yr" },
+  { name: "Saveetha Medical College", city: "Chennai", state: "Tamil Nadu", tier: "deemed", fee: "₹25–45 L/yr" },
+  { name: "Datta Meghe Institute (JNMC) Wardha", city: "Wardha", state: "Maharashtra", tier: "deemed", fee: "₹15–30 L/yr" },
+];
+
+export interface BranchChance {
+  branch: string;
+  degree: "MD" | "MS";
+  chance: Chance;
+  closingRank: number;
+}
+
+export interface PgCollegeMatch extends PgCollege {
+  tierLabel: string;
+  branches: BranchChance[];
+}
+
+function chanceFor(rank: number, closing: number): Chance | null {
+  if (rank <= closing * 0.85) return "Safe";
+  if (rank <= closing * 1.1) return "Moderate";
+  if (rank <= closing * 1.35) return "Reach";
+  return null;
+}
+
+export function predictPgColleges(rank: number, category: Category, includeDeemed: boolean): PgCollegeMatch[] {
+  const factor = CATEGORY_FACTOR[category];
+  const out: PgCollegeMatch[] = [];
+  for (const c of PG_COLLEGES) {
+    if (c.tier === "deemed" && !includeDeemed) continue;
+    const t = PG_TIER[c.tier];
+    const catFactor = c.tier === "deemed" ? 1 : factor; // no reservation in deemed seats
+    const branches: BranchChance[] = [];
+    for (const b of PG_BRANCHES) {
+      const closing = Math.round((b.base * t.mult + t.add) * catFactor);
+      const chance = chanceFor(rank, closing);
+      if (chance) branches.push({ branch: b.name, degree: b.degree, chance, closingRank: closing });
+    }
+    if (branches.length) out.push({ ...c, tierLabel: t.label, branches });
+  }
+  // Better colleges first; within a tier, the one offering the most preferred branch
+  // (PG_BRANCHES is in preference order).
+  const firstIdx = (m: PgCollegeMatch) => PG_BRANCHES.findIndex((b) => b.name === m.branches[0].branch);
+  const tierOrder: PgTier[] = ["top", "good", "govt", "dnb", "deemed"];
+  return out.sort((a, b) => tierOrder.indexOf(a.tier) - tierOrder.indexOf(b.tier) || firstIdx(a) - firstIdx(b));
+}
+
+export interface BranchSummary {
+  branch: string;
+  degree: "MD" | "MS";
+  /** Chance at bestCollege. */
+  chance: Chance;
+  colleges: number;
+  /** Best-ranked college where this branch is realistic (see pgBranchSummary). */
+  bestCollege: string;
+}
+
+/**
+ * Per branch, in preference order: the best-ranked college where the student has a
+ * Safe/Moderate chance (else the best Reach college), that college's chance, and
+ * how many colleges offer the branch at this rank.
+ */
+export function pgBranchSummary(matches: PgCollegeMatch[]): BranchSummary[] {
+  const out: BranchSummary[] = [];
+  for (const b of PG_BRANCHES) {
+    // matches are sorted best college first
+    const offers = matches.flatMap((m) => {
+      const hit = m.branches.find((x) => x.branch === b.name);
+      return hit ? [{ college: m.name, chance: hit.chance }] : [];
+    });
+    if (!offers.length) continue;
+    const pick = offers.find((o) => o.chance !== "Reach") ?? offers[0];
+    out.push({ branch: b.name, degree: b.degree, chance: pick.chance, colleges: offers.length, bestCollege: pick.college });
+  }
   return out;
 }

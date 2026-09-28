@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import {
   CATEGORIES, MAX_SCORE, TOTAL_CANDIDATES, UG_QUALIFYING_MARKS, estimateRank, isUgQualified, predictUgColleges,
-  pgBandFor, ugAlternatives,
-  type Category, type Chance, type CollegeMatch, type NeetType, type PgBand,
+  pgBandFor, pgBranchSummary, predictPgColleges, ugAlternatives,
+  type Category, type Chance, type CollegeMatch, type NeetType, type PgBand, type PgCollegeMatch,
 } from "@/data/neet-predictor";
 
 type Step = 1 | 2 | 3;
@@ -28,6 +28,7 @@ interface Prediction {
   rankIsEstimate: boolean;
   colleges: CollegeMatch[];
   pgBand: PgBand | null;
+  pgColleges: PgCollegeMatch[];
   alternatives: string[];
 }
 
@@ -59,6 +60,7 @@ export default function PredictorPage() {
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [news, setNews] = useState<NewsLink[]>([]);
   const [newsLoading, setNewsLoading] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   const mobileDigits = normalizeMobile(mobile);
   const num = Number(value);
@@ -72,7 +74,10 @@ export default function PredictorPage() {
       : type === "ug"
         ? `${mode === "score" ? `Score ${num}/720, ` : ""}AIR ${p.rankIsEstimate ? "~" : ""}${fmt(p.rank)}, ${categoryLabel}. ` +
           `${p.colleges.length} AIQ colleges matched${p.colleges[0] ? ` (e.g. ${p.colleges[0].name})` : ""}.`
-        : `${mode === "score" ? `Score ${num}/800, ` : ""}AIR ${p.rankIsEstimate ? "~" : ""}${fmt(p.rank)}, ${categoryLabel}. ${p.pgBand?.title}.`;
+        : `${mode === "score" ? `Score ${num}/800, ` : ""}AIR ${p.rankIsEstimate ? "~" : ""}${fmt(p.rank)}, ${categoryLabel}. ` +
+          (p.pgColleges[0]
+            ? `Best: ${p.pgColleges[0].branches[0].branch} at ${p.pgColleges[0].name}; ${p.pgColleges.length} colleges matched.`
+            : `${p.pgBand?.title}.`);
     // Fire-and-forget: the prediction shows even if saving fails.
     supabase
       .from("enquiries")
@@ -120,9 +125,11 @@ export default function PredictorPage() {
       rankIsEstimate,
       colleges: type === "ug" && qualified ? predictUgColleges(rank, category, includeDeemed) : [],
       pgBand: type === "pg" ? pgBandFor(rank, category) : null,
+      pgColleges: type === "pg" ? predictPgColleges(rank, category, includeDeemed) : [],
       alternatives: type === "ug" && qualified ? ugAlternatives(rank, category) : [],
     };
     setPrediction(p);
+    setShowAll(false);
     setStep(3);
     saveLead(p);
     loadNews(rank);
@@ -135,8 +142,12 @@ export default function PredictorPage() {
     setStep(2);
   };
 
-  const govtMatches = prediction?.colleges.filter((c) => c.type === "Government") ?? [];
-  const deemedMatches = prediction?.colleges.filter((c) => c.type === "Deemed") ?? [];
+  const ugGroups = [
+    { title: "Government MBBS (AIQ 15%)", list: prediction?.colleges.filter((c) => c.type === "Government" && c.course !== "BDS") ?? [] },
+    { title: "Government BDS (Dental)", list: prediction?.colleges.filter((c) => c.course === "BDS") ?? [] },
+    { title: "Deemed Universities (MBBS)", list: prediction?.colleges.filter((c) => c.type === "Deemed") ?? [] },
+  ];
+  const branchSummary = prediction ? pgBranchSummary(prediction.pgColleges) : [];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -310,17 +321,15 @@ export default function PredictorPage() {
                   </div>
                 </div>
 
-                {type === "ug" && (
-                  <label className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={includeDeemed}
-                      onChange={(e) => setIncludeDeemed(e.target.checked)}
-                      className="w-4 h-4 accent-blue-600"
-                    />
-                    Include deemed universities (higher fees)
-                  </label>
-                )}
+                <label className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={includeDeemed}
+                    onChange={(e) => setIncludeDeemed(e.target.checked)}
+                    className="w-4 h-4 accent-blue-600"
+                  />
+                  Include deemed universities (higher fees)
+                </label>
 
                 <button
                   onClick={handlePredict}
@@ -381,10 +390,7 @@ export default function PredictorPage() {
                 <>
                   {prediction.colleges.length > 0 ? (
                     <div className="space-y-6 mb-6">
-                      {[
-                        { title: "Government Medical Colleges (AIQ 15%)", list: govtMatches },
-                        { title: "Deemed Universities", list: deemedMatches },
-                      ]
+                      {ugGroups
                         .filter((g) => g.list.length > 0)
                         .map((g) => (
                           <div key={g.title}>
@@ -394,7 +400,12 @@ export default function PredictorPage() {
                                 <div key={c.name} className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl p-3.5">
                                   <Building2 className="w-5 h-5 text-blue-600 shrink-0" />
                                   <div className="min-w-0 flex-1">
-                                    <p className="font-semibold text-gray-900 text-sm">{c.name}</p>
+                                    <p className="font-semibold text-gray-900 text-sm">
+                                      {c.name}
+                                      <span className="ml-1.5 align-middle text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                                        {c.course ?? "MBBS"}
+                                      </span>
+                                    </p>
                                     <p className="text-xs text-gray-500">
                                       {c.city}, {c.state} · Closing rank ~{fmt(c.adjustedClosingRank)} · {c.fee}
                                     </p>
@@ -424,13 +435,70 @@ export default function PredictorPage() {
                 </>
               )}
 
-              {/* PG guidance */}
-              {type === "pg" && prediction.pgBand && (
-                <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-5 md:p-6 mb-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3">{prediction.pgBand.title}</h3>
-                  <p className="text-sm text-gray-700 mb-2"><strong>Likely branches:</strong> {prediction.pgBand.branches}</p>
-                  <p className="text-sm text-gray-700"><strong>Where:</strong> {prediction.pgBand.where}</p>
-                </div>
+              {/* PG: branches + colleges */}
+              {type === "pg" && (
+                branchSummary.length > 0 ? (
+                  <div className="space-y-6 mb-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-3">Branches you can get</h3>
+                      <div className="grid sm:grid-cols-2 gap-2">
+                        {branchSummary.map((b) => (
+                          <div key={b.branch} className="flex items-center justify-between gap-2 bg-white border border-gray-100 rounded-xl px-3 py-2">
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-gray-900">{b.degree} {b.branch}</p>
+                              <p className="text-[11px] text-gray-500 truncate">
+                                {b.bestCollege}{b.colleges > 1 ? ` +${b.colleges - 1} more` : ""}
+                              </p>
+                            </div>
+                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${chanceStyle[b.chance]}`}>{b.chance}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 mb-3">Colleges &amp; branches for your rank</h3>
+                      <div className="space-y-3">
+                        {(showAll ? prediction.pgColleges : prediction.pgColleges.slice(0, 12)).map((c) => (
+                          <div key={c.name} className="bg-gray-50 border border-gray-100 rounded-xl p-4">
+                            <div className="flex items-start gap-3 mb-2.5">
+                              <Building2 className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+                              <div className="min-w-0">
+                                <p className="font-semibold text-gray-900 text-sm">{c.name}</p>
+                                <p className="text-xs text-gray-500">{c.city}, {c.state} · {c.tierLabel} · {c.fee}</p>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {c.branches.slice(0, 8).map((b) => (
+                                <span key={b.branch} className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${chanceStyle[b.chance]}`}>
+                                  {b.branch} · {b.chance}
+                                </span>
+                              ))}
+                              {c.branches.length > 8 && (
+                                <span className="text-[11px] text-gray-500 px-2 py-0.5">+{c.branches.length - 8} more</span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      {!showAll && prediction.pgColleges.length > 12 && (
+                        <button
+                          onClick={() => setShowAll(true)}
+                          className="mt-3 w-full text-sm font-semibold text-blue-700 border border-blue-200 rounded-xl py-2.5 hover:bg-blue-50"
+                        >
+                          Show all {prediction.pgColleges.length} colleges
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  prediction.pgBand && (
+                    <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 md:p-6 mb-6">
+                      <h3 className="text-lg font-bold text-gray-900 mb-3">{prediction.pgBand.title}</h3>
+                      <p className="text-sm text-gray-700 mb-2"><strong>Likely branches:</strong> {prediction.pgBand.branches}</p>
+                      <p className="text-sm text-gray-700"><strong>Where:</strong> {prediction.pgBand.where}</p>
+                    </div>
+                  )
+                )
               )}
 
               <div className="flex items-start gap-2 text-xs text-gray-500 mb-6">

@@ -2,7 +2,7 @@ import type { College } from "@/data/colleges";
 import type { Scholarship } from "@/data/scholarships";
 import { pgCourses } from "@/data/pg-courses";
 import {
-  CATEGORIES, MAX_SCORE, UG_QUALIFYING_MARKS, estimateRank, isUgQualified, pgBandFor, predictUgColleges, ugAlternatives,
+  CATEGORIES, MAX_SCORE, UG_QUALIFYING_MARKS, estimateRank, isUgQualified, pgBandFor, pgBranchSummary, predictPgColleges, predictUgColleges, ugAlternatives,
   type Category, type NeetType,
 } from "@/data/neet-predictor";
 
@@ -187,8 +187,24 @@ function prediction(p: NonNullable<ReturnType<typeof parsePrediction>>): BotRepl
   const foot = `\n_Previous-year cutoffs par based, indicative hai._ Detailed list ke liye counsellor se baat karein ya ${SITE}/predictor dekhein.`;
 
   if (p.type === "pg") {
-    const band = pgBandFor(rank, p.category);
-    return { text: head + `\n*${band.title}*\nBranches: ${band.branches}\nKahan: ${band.where}\n` + foot };
+    const colleges = predictPgColleges(rank, p.category, true);
+    if (!colleges.length) {
+      const band = pgBandFor(rank, p.category);
+      return { text: head + `\n*${band.title}*\nBranches: ${band.branches}\nKahan: ${band.where}\n` + foot };
+    }
+    const branches = pgBranchSummary(colleges).slice(0, 8);
+    return {
+      text:
+        head +
+        "\n*Branches jo mil sakti hain:*\n" +
+        branches.map((b) => `- ${b.degree} ${b.branch} — ${b.chance} (${b.bestCollege}${b.colleges > 1 ? ` +${b.colleges - 1}` : ""})`).join("\n") +
+        "\n\n*Colleges & branches:*\n" +
+        colleges
+          .slice(0, 5)
+          .map((c) => `- *${c.name}* (${c.tierLabel}): ${c.branches.slice(0, 3).map((b) => `${b.branch} (${b.chance})`).join(", ")}`)
+          .join("\n") +
+        "\n" + foot,
+    };
   }
 
   if (!isUgQualified(p.mode, p.value, p.category)) {
@@ -203,10 +219,12 @@ function prediction(p: NonNullable<ReturnType<typeof parsePrediction>>): BotRepl
   }
 
   const matches = predictUgColleges(rank, p.category, true);
-  const govt = matches.filter((c) => c.type === "Government").slice(0, 5);
+  const govt = matches.filter((c) => c.type === "Government" && c.course !== "BDS").slice(0, 5);
+  const bds = matches.filter((c) => c.course === "BDS").slice(0, 3);
   const deemed = matches.filter((c) => c.type === "Deemed").slice(0, 3);
   let body = "";
-  if (govt.length) body += "\n*Government (AIQ):*\n" + govt.map((c) => `- ${c.name} — ${c.chance}`).join("\n") + "\n";
+  if (govt.length) body += "\n*Government MBBS (AIQ):*\n" + govt.map((c) => `- ${c.name} — ${c.chance}`).join("\n") + "\n";
+  if (bds.length) body += "\n*Government BDS (Dental):*\n" + bds.map((c) => `- ${c.name} — ${c.chance}`).join("\n") + "\n";
   if (deemed.length) body += "\n*Deemed:*\n" + deemed.map((c) => `- ${c.name} (${c.fee}) — ${c.chance}`).join("\n") + "\n";
   if (!govt.length) body += "\n*Aur options:*\n" + ugAlternatives(rank, p.category).map((a) => `- ${a}`).join("\n") + "\n";
   return { text: head + body + foot };
