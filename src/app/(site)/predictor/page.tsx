@@ -3,140 +3,134 @@ import { useState } from "react";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { TrendingUp, Award, Phone, ArrowLeft, User, ArrowRight, Loader2, ExternalLink } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import {
+  TrendingUp, Award, Phone, ArrowLeft, ArrowRight, Loader2, ExternalLink, Building2, Info, RotateCcw,
+} from "lucide-react";
+import {
+  CATEGORIES, MAX_SCORE, TOTAL_CANDIDATES, estimateRank, predictUgColleges, pgBandFor, ugAlternatives,
+  type Category, type Chance, type CollegeMatch, type NeetType, type PgBand,
+} from "@/data/neet-predictor";
 
 type Step = 1 | 2 | 3;
-type PredictorType = "ug" | "pg";
+type InputMode = "score" | "rank";
 
-interface CollegeResult {
+interface NewsLink {
   name: string;
   description: string;
   url: string;
 }
 
-const UG_BANDS: Record<string, { band: string; label: string; color: string; advice: string }> = {
-  "700-720": { band: "AIR < 500", label: "Top Tier", color: "green", advice: "Excellent! You can aim for the country's premier medical institutes like AIIMS, JIPMER, CMC." },
-  "650-699": { band: "AIR 500-5,000", label: "Excellent", color: "emerald", advice: "Great score! You can get into top government medical colleges across India." },
-  "600-649": { band: "AIR 5,000-25,000", label: "Very Good", color: "blue", advice: "You have excellent options in both government and private medical colleges." },
-  "550-599": { band: "AIR 25,000-75,000", label: "Good", color: "indigo", advice: "You can secure admission in good government and private medical colleges." },
-  "500-549": { band: "AIR 75,000-1,50,000", label: "Fair", color: "orange", advice: "You have options in private and deemed universities. Consider budget planning." },
-  "400-499": { band: "AIR 1,50,000+", label: "Above Average", color: "yellow", advice: "Consider private colleges or explore affordable MBBS abroad options." },
-  "0-399": { band: "Below Cutoff", label: "Needs Attention", color: "red", advice: "Don't worry! Explore MBBS abroad, BDS, BAMS or other medical streams." },
-};
-
-const PG_BANDS: Record<string, { band: string; label: string; color: string; advice: string }> = {
-  "750-800": { band: "AIR < 1,000", label: "Top Tier", color: "green", advice: "Outstanding! You can choose any specialty from the top institutes." },
-  "700-749": { band: "AIR 1,000-5,000", label: "Excellent", color: "emerald", advice: "Excellent rank! You can get your preferred branch in top institutes." },
-  "600-699": { band: "AIR 5,000-20,000", label: "Very Good", color: "blue", advice: "Good options available in both government and private institutions." },
-  "500-599": { band: "AIR 20,000-50,000", label: "Good", color: "indigo", advice: "You can get good PG seats. Consider both MD/MS and DNB options." },
-  "350-499": { band: "AIR 50,000+", label: "Fair", color: "orange", advice: "Consider DNB, diploma courses or reappear for better rank next year." },
-};
-
-const colorMap: Record<string, { bg: string; border: string; text: string; badge: string }> = {
-  green: { bg: "bg-green-50", border: "border-green-200", text: "text-green-700", badge: "bg-green-100 text-green-700" },
-  emerald: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", badge: "bg-emerald-100 text-emerald-700" },
-  blue: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", badge: "bg-blue-100 text-blue-700" },
-  indigo: { bg: "bg-indigo-50", border: "border-indigo-200", text: "text-indigo-700", badge: "bg-indigo-100 text-indigo-700" },
-  orange: { bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", badge: "bg-orange-100 text-orange-700" },
-  yellow: { bg: "bg-yellow-50", border: "border-yellow-200", text: "text-yellow-700", badge: "bg-yellow-100 text-yellow-700" },
-  red: { bg: "bg-red-50", border: "border-red-200", text: "text-red-700", badge: "bg-red-100 text-red-700" },
-};
-
-function getBand(type: PredictorType, score: number): { band: string; label: string; color: string; advice: string } | null {
-  const bands = type === "ug" ? UG_BANDS : PG_BANDS;
-  for (const [range, pred] of Object.entries(bands)) {
-    const [min, max] = range.split("-").map(Number);
-    if (score >= min && score <= max) return pred;
-  }
-  return null;
+interface Prediction {
+  rank: number;
+  rankIsEstimate: boolean;
+  colleges: CollegeMatch[];
+  pgBand: PgBand | null;
+  alternatives: string[];
 }
+
+const chanceStyle: Record<Chance, string> = {
+  Safe: "bg-green-100 text-green-700 border-green-200",
+  Moderate: "bg-amber-100 text-amber-700 border-amber-200",
+  Reach: "bg-rose-100 text-rose-700 border-rose-200",
+};
+
+const fmt = (n: number) => n.toLocaleString("en-IN");
 
 export default function PredictorPage() {
   const [step, setStep] = useState<Step>(1);
-  const [type, setType] = useState<PredictorType>("ug");
+  const [type, setType] = useState<NeetType>("ug");
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
-  const [score, setScore] = useState("");
-  const [result, setResult] = useState<{ band: string; label: string; color: string; advice: string } | null>(null);
-  const [colleges, setColleges] = useState<CollegeResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [mode, setMode] = useState<InputMode>("score");
+  const [value, setValue] = useState("");
+  const [category, setCategory] = useState<Category>("general");
+  const [includeDeemed, setIncludeDeemed] = useState(true);
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
+  const [news, setNews] = useState<NewsLink[]>([]);
+  const [newsLoading, setNewsLoading] = useState(false);
 
-  const handleStep1 = () => {
-    if (name.trim() && mobile.trim().length >= 10) {
-      setStep(2);
-    }
+  const mobileDigits = mobile.replace(/\D/g, "");
+  const num = Number(value);
+  const max = mode === "score" ? MAX_SCORE[type] : TOTAL_CANDIDATES[type];
+  const valueValid = value !== "" && Number.isFinite(num) && num >= (mode === "score" ? 0 : 1) && num <= max;
+
+  const saveLead = (p: Prediction) => {
+    const categoryLabel = CATEGORIES.find((c) => c.value === category)?.label;
+    const summary =
+      type === "ug"
+        ? `${mode === "score" ? `Score ${num}/720, ` : ""}AIR ${p.rankIsEstimate ? "~" : ""}${fmt(p.rank)}, ${categoryLabel}. ` +
+          `${p.colleges.length} AIQ colleges matched${p.colleges[0] ? ` (e.g. ${p.colleges[0].name})` : ""}.`
+        : `${mode === "score" ? `Score ${num}/800, ` : ""}AIR ${p.rankIsEstimate ? "~" : ""}${fmt(p.rank)}, ${categoryLabel}. ${p.pgBand?.title}.`;
+    // Fire-and-forget: the prediction shows even if saving fails.
+    supabase
+      .from("enquiries")
+      .insert({
+        name: name.trim(),
+        phone: mobileDigits,
+        course: type === "ug" ? "NEET UG" : "NEET PG",
+        source: `NEET ${type.toUpperCase()} Predictor`,
+        message: summary,
+      })
+      .then(({ error }) => {
+        if (error) console.error("Predictor lead save failed:", error.message);
+      });
   };
 
-  const handlePredict = async () => {
-    const s = parseInt(score);
-    if (isNaN(s) || s < 0) return;
-
-    const maxScore = type === "ug" ? 720 : 800;
-    const clamped = Math.min(s, maxScore);
-    const pred = getBand(type, clamped);
-    if (!pred) return;
-
-    setResult(pred);
-    setLoading(true);
-    setStep(3);
-
+  const loadNews = async (rank: number) => {
+    setNewsLoading(true);
     try {
-      const searchQuery = type === "ug"
-        ? `NEET UG rank ${s} which medical college can I get admission India`
-        : `NEET PG rank ${s} which MD MS college can I get admission India`;
-
+      const query =
+        type === "ug"
+          ? `NEET UG ${new Date().getFullYear()} MCC AIQ closing rank MBBS rank ${rank}`
+          : `NEET PG ${new Date().getFullYear()} closing rank branch wise rank ${rank}`;
       const res = await fetch("/api/predictor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: searchQuery }),
+        body: JSON.stringify({ query }),
       });
-
       const data = await res.json();
-      if (data.colleges) {
-        setColleges(data.colleges.slice(0, 6));
-      }
+      setNews(Array.isArray(data.colleges) ? data.colleges.slice(0, 4) : []);
     } catch {
-      // Silently fail - local prediction still shows
+      setNews([]);
     } finally {
-      setLoading(false);
+      setNewsLoading(false);
     }
   };
 
-  const handleSaveLead = async () => {
-    setSaving(true);
-    try {
-      const { createClient } = await import("@supabase/supabase-js");
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-      await supabase.from("enquiries").insert({
-        name,
-        phone: mobile,
-        source: `NEET ${type.toUpperCase()} Predictor`,
-        neet_score: parseInt(score),
-        neet_type: type,
-        prediction_band: result?.band,
-        prediction_label: result?.label,
-      });
-    } catch {
-      // Silent fail
-    } finally {
-      setSaving(false);
-      setSubmitted(true);
-    }
+  const handlePredict = () => {
+    if (!valueValid) return;
+    const rankIsEstimate = mode === "score";
+    const rank = rankIsEstimate ? estimateRank(type, num) : Math.round(num);
+    const p: Prediction = {
+      rank,
+      rankIsEstimate,
+      colleges: type === "ug" ? predictUgColleges(rank, category, includeDeemed) : [],
+      pgBand: type === "pg" ? pgBandFor(rank, category) : null,
+      alternatives: type === "ug" ? ugAlternatives(rank, category) : [],
+    };
+    setPrediction(p);
+    setStep(3);
+    saveLead(p);
+    loadNews(rank);
   };
 
-  const colors = result ? colorMap[result.color] : colorMap.blue;
+  const reset = () => {
+    setPrediction(null);
+    setNews([]);
+    setValue("");
+    setStep(2);
+  };
+
+  const govtMatches = prediction?.colleges.filter((c) => c.type === "Government") ?? [];
+  const deemedMatches = prediction?.colleges.filter((c) => c.type === "Deemed") ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
       {/* Hero */}
-      <div className="bg-gradient-to-br from-red-600 via-red-600 to-rose-700 py-12 md:py-16">
+      <div className="bg-gradient-to-br from-blue-800 via-blue-700 to-green-700 py-12 md:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <Link href="/" className="inline-flex items-center gap-2 text-white/80 hover:text-white text-sm font-medium mb-6">
             <ArrowLeft className="w-4 h-4" />
@@ -147,11 +141,9 @@ export default function PredictorPage() {
               <TrendingUp className="w-4 h-4" />
               Free NEET Predictor Tool
             </div>
-            <h1 className="text-3xl md:text-5xl font-black text-white mb-3">
-              Predict Your NEET Rank & College
-            </h1>
-            <p className="text-red-100 max-w-xl mx-auto text-lg">
-              Enter your NEET score and instantly find out which medical colleges you can get into
+            <h1 className="text-3xl md:text-5xl font-black text-white mb-3">Predict Your NEET Rank &amp; College</h1>
+            <p className="text-blue-100 max-w-xl mx-auto text-lg">
+              Enter your NEET score or AIR and see which medical colleges match your rank and category
             </p>
           </div>
         </div>
@@ -159,38 +151,38 @@ export default function PredictorPage() {
 
       {/* Steps Indicator */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 -mt-6">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 flex items-center justify-center gap-4">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 flex items-center justify-center gap-2 sm:gap-4">
           {[
             { num: 1, label: "Your Details" },
             { num: 2, label: "NEET Score" },
             { num: 3, label: "Result" },
           ].map((s, i) => (
-            <div key={s.num} className="flex items-center gap-3">
+            <div key={s.num} className="flex items-center gap-2 sm:gap-3">
               <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                  step >= s.num ? "bg-red-600 text-white" : "bg-gray-100 text-gray-400"
-                }`}>
+                <div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    step >= s.num ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-400"
+                  }`}
+                >
                   {step > s.num ? "✓" : s.num}
                 </div>
-                <span className={`text-sm font-medium ${step >= s.num ? "text-gray-900" : "text-gray-400"}`}>
+                <span className={`text-xs sm:text-sm font-medium ${step >= s.num ? "text-gray-900" : "text-gray-400"}`}>
                   {s.label}
                 </span>
               </div>
-              {i < 2 && <div className="w-8 h-0.5 bg-gray-200 mx-1" />}
+              {i < 2 && <div className="w-4 sm:w-8 h-0.5 bg-gray-200" />}
             </div>
           ))}
         </div>
       </div>
 
-      {/* Predictor Card */}
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
         <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-
           {/* Step 1: Name + Mobile */}
           {step === 1 && (
             <div className="p-6 md:p-10">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Let's Get Started</h2>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Let&apos;s Get Started</h2>
                 <p className="text-gray-500">Enter your details to get personalised college predictions</p>
               </div>
               <div className="max-w-md mx-auto space-y-4">
@@ -201,7 +193,7 @@ export default function PredictorPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your name"
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 text-base focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none transition-all"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   />
                 </div>
                 <div>
@@ -210,14 +202,14 @@ export default function PredictorPage() {
                     type="tel"
                     value={mobile}
                     onChange={(e) => setMobile(e.target.value)}
-                    placeholder="Enter your mobile number"
-                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 text-base focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none transition-all"
+                    placeholder="10-digit mobile number"
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 text-base focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   />
                 </div>
                 <button
-                  onClick={handleStep1}
-                  disabled={!name.trim() || mobile.trim().length < 10}
-                  className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-red-200 text-base"
+                  onClick={() => setStep(2)}
+                  disabled={!name.trim() || mobileDigits.length < 10}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-200 text-base"
                 >
                   Continue
                   <ArrowRight className="w-5 h-5" />
@@ -226,155 +218,248 @@ export default function PredictorPage() {
             </div>
           )}
 
-          {/* Step 2: Score Input */}
+          {/* Step 2: Score / Rank */}
           {step === 2 && (
             <div className="p-6 md:p-10">
               <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">Enter Your NEET Score</h2>
-                <p className="text-gray-500">We'll predict your rank and eligible colleges</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Enter Your NEET Result</h2>
+                <p className="text-gray-500">Know your AIR? Enter it for the most accurate prediction.</p>
               </div>
 
-              {/* Type Toggle */}
-              <div className="flex bg-gray-100 rounded-xl p-1 mb-6 max-w-md mx-auto">
-                <button
-                  onClick={() => { setType("ug"); setScore(""); }}
-                  className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all ${
-                    type === "ug" ? "bg-blue-600 text-white shadow-md" : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  NEET UG
-                </button>
-                <button
-                  onClick={() => { setType("pg"); setScore(""); }}
-                  className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all ${
-                    type === "pg" ? "bg-green-600 text-white shadow-md" : "text-gray-500 hover:text-gray-700"
-                  }`}
-                >
-                  NEET PG
-                </button>
-              </div>
+              <div className="max-w-md mx-auto space-y-5">
+                {/* UG / PG */}
+                <div className="flex bg-gray-100 rounded-xl p-1">
+                  {(["ug", "pg"] as NeetType[]).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => { setType(t); setValue(""); }}
+                      className={`flex-1 py-3 px-4 rounded-lg font-bold text-sm transition-all ${
+                        type === t ? (t === "ug" ? "bg-green-600" : "bg-blue-600") + " text-white shadow-md" : "text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      NEET {t.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
 
-              <div className="max-w-md mx-auto">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  NEET {type.toUpperCase()} Score (out of {type === "ug" ? 720 : 800})
-                </label>
-                <div className="flex gap-3">
+                {/* Score / Rank */}
+                <div>
+                  <div className="flex gap-2 mb-2">
+                    {(["score", "rank"] as InputMode[]).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => { setMode(m); setValue(""); }}
+                        className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-colors ${
+                          mode === m ? "bg-blue-50 border-blue-300 text-blue-700" : "border-gray-200 text-gray-500 hover:bg-gray-50"
+                        }`}
+                      >
+                        {m === "score" ? "I know my score" : "I know my AIR"}
+                      </button>
+                    ))}
+                  </div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {mode === "score"
+                      ? `NEET ${type.toUpperCase()} Score (out of ${MAX_SCORE[type]})`
+                      : `NEET ${type.toUpperCase()} All India Rank (CRL)`}
+                  </label>
                   <input
                     type="number"
-                    value={score}
-                    onChange={(e) => setScore(e.target.value)}
-                    placeholder={`0 - ${type === "ug" ? 720 : 800}`}
-                    min="0"
-                    max={type === "ug" ? 720 : 800}
-                    className="flex-1 border-2 border-gray-200 rounded-xl px-4 py-3.5 text-lg font-bold text-gray-900 focus:border-red-500 focus:ring-2 focus:ring-red-200 outline-none transition-all"
+                    inputMode="numeric"
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    placeholder={mode === "score" ? `0 - ${MAX_SCORE[type]}` : "e.g. 25000"}
+                    min={mode === "score" ? 0 : 1}
+                    max={max}
+                    className="w-full border-2 border-gray-200 rounded-xl px-4 py-3.5 text-lg font-bold text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
                   />
-                  <button
-                    onClick={handlePredict}
-                    disabled={!score || parseInt(score) < 0}
-                    className="bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold px-6 md:px-8 rounded-xl text-sm md:text-base transition-colors flex items-center gap-2 shadow-lg shadow-red-200"
-                  >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <TrendingUp className="w-5 h-5" />}
-                    Predict
-                  </button>
+                  {value !== "" && !valueValid && (
+                    <p className="text-xs text-rose-600 mt-1.5">
+                      Enter a value between {mode === "score" ? 0 : 1} and {fmt(max)}
+                    </p>
+                  )}
                 </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Category</label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {CATEGORIES.map((c) => (
+                      <button
+                        key={c.value}
+                        onClick={() => setCategory(c.value)}
+                        className={`py-2 rounded-lg text-xs sm:text-sm font-semibold border transition-colors ${
+                          category === c.value ? "bg-blue-600 border-blue-600 text-white" : "border-gray-200 text-gray-600 hover:bg-gray-50"
+                        }`}
+                      >
+                        {c.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {type === "ug" && (
+                  <label className="flex items-center gap-2.5 text-sm text-gray-700 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={includeDeemed}
+                      onChange={(e) => setIncludeDeemed(e.target.checked)}
+                      className="w-4 h-4 accent-blue-600"
+                    />
+                    Include deemed universities (higher fees)
+                  </label>
+                )}
+
+                <button
+                  onClick={handlePredict}
+                  disabled={!valueValid}
+                  className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-blue-200"
+                >
+                  <TrendingUp className="w-5 h-5" />
+                  Predict My Colleges
+                </button>
               </div>
             </div>
           )}
 
           {/* Step 3: Result */}
-          {step === 3 && result && (
+          {step === 3 && prediction && (
             <div className="p-6 md:p-10">
-              {/* Success Header */}
-              <div className={`${colors.bg} ${colors.border} border-2 rounded-2xl p-5 md:p-6 mb-6`}>
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                    <Award className={`w-7 h-7 ${colors.text}`} />
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-2xl p-5 md:p-6 mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shrink-0">
+                    <Award className="w-7 h-7 text-blue-700" />
                   </div>
                   <div>
-                    <div className={`text-xs font-semibold uppercase tracking-wide ${colors.text} opacity-70`}>Your Predicted Rank</div>
-                    <div className={`text-2xl font-black ${colors.text}`}>{result.band}</div>
+                    <div className="text-xs font-semibold uppercase tracking-wide text-blue-700/70">
+                      {prediction.rankIsEstimate ? "Estimated All India Rank" : "Your All India Rank"}
+                    </div>
+                    <div className="text-2xl font-black text-blue-800">
+                      {prediction.rankIsEstimate ? "~" : ""}
+                      {fmt(prediction.rank)}
+                    </div>
                   </div>
-                  <span className={`ml-auto text-sm font-bold px-3 py-1 rounded-full ${colors.badge}`}>
-                    {result.label}
+                  <span className="ml-auto text-xs sm:text-sm font-bold px-3 py-1 rounded-full bg-white text-blue-700 border border-blue-200">
+                    NEET {type.toUpperCase()} · {CATEGORIES.find((c) => c.value === category)?.label}
                   </span>
                 </div>
-                <p className={`text-sm md:text-base font-medium ${colors.text} opacity-90`}>{result.advice}</p>
+                {prediction.rankIsEstimate && (
+                  <p className="text-xs text-blue-800/80 mt-3">
+                    Estimated from previous-year marks-vs-rank trends. Enter your actual AIR for a sharper prediction.
+                  </p>
+                )}
               </div>
 
-              {/* Colleges from Google API */}
-              {loading ? (
-                <div className="text-center py-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-red-600 mx-auto mb-3" />
-                  <p className="text-gray-500 text-sm">Fetching college suggestions...</p>
-                </div>
-              ) : colleges.length > 0 ? (
-                <div className="mb-6">
-                  <h3 className="text-lg font-bold text-gray-900 mb-3">Suggested Colleges for You</h3>
-                  <div className="space-y-3">
-                    {colleges.map((college, i) => (
-                      <a
-                        key={i}
-                        href={college.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block bg-gray-50 hover:bg-blue-50 border border-gray-100 hover:border-blue-200 rounded-xl p-4 transition-colors group"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <h4 className="font-bold text-gray-900 group-hover:text-blue-700 text-sm">{college.name}</h4>
-                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">{college.description}</p>
+              {/* UG colleges */}
+              {type === "ug" && (
+                <>
+                  {prediction.colleges.length > 0 ? (
+                    <div className="space-y-6 mb-6">
+                      {[
+                        { title: "Government Medical Colleges (AIQ 15%)", list: govtMatches },
+                        { title: "Deemed Universities", list: deemedMatches },
+                      ]
+                        .filter((g) => g.list.length > 0)
+                        .map((g) => (
+                          <div key={g.title}>
+                            <h3 className="text-lg font-bold text-gray-900 mb-3">{g.title}</h3>
+                            <div className="space-y-2.5">
+                              {g.list.slice(0, 10).map((c) => (
+                                <div key={c.name} className="flex items-center gap-3 bg-gray-50 border border-gray-100 rounded-xl p-3.5">
+                                  <Building2 className="w-5 h-5 text-blue-600 shrink-0" />
+                                  <div className="min-w-0 flex-1">
+                                    <p className="font-semibold text-gray-900 text-sm">{c.name}</p>
+                                    <p className="text-xs text-gray-500">
+                                      {c.city}, {c.state} · Closing rank ~{fmt(c.adjustedClosingRank)} · {c.fee}
+                                    </p>
+                                  </div>
+                                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full border shrink-0 ${chanceStyle[c.chance]}`}>
+                                    {c.chance}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           </div>
-                          <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600 shrink-0 ml-2 mt-0.5" />
-                        </div>
-                      </a>
-                    ))}
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 mb-6">
+                      <h3 className="font-bold text-gray-900 mb-1">Government MBBS via All India Quota looks difficult at this rank</h3>
+                      <p className="text-sm text-gray-600">Good options are still open — see below.</p>
+                    </div>
+                  )}
+
+                  <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-6">
+                    <h3 className="font-bold text-gray-900 mb-2">Other options to consider</h3>
+                    <ul className="space-y-1.5 text-sm text-gray-700 list-disc pl-5">
+                      {prediction.alternatives.map((a) => <li key={a}>{a}</li>)}
+                    </ul>
                   </div>
-                </div>
-              ) : (
-                <div className={`${colors.bg} ${colors.border} border-2 rounded-2xl p-5 mb-6`}>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Based on your score, you can explore:</h3>
-                  <p className="text-gray-600 text-sm mb-3">{result.advice}</p>
-                  <p className="text-gray-500 text-xs">Contact our counsellors for a detailed, personalised college list.</p>
+                </>
+              )}
+
+              {/* PG guidance */}
+              {type === "pg" && prediction.pgBand && (
+                <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-5 md:p-6 mb-6">
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">{prediction.pgBand.title}</h3>
+                  <p className="text-sm text-gray-700 mb-2"><strong>Likely branches:</strong> {prediction.pgBand.branches}</p>
+                  <p className="text-sm text-gray-700"><strong>Where:</strong> {prediction.pgBand.where}</p>
                 </div>
               )}
 
-              {/* Lead Capture / Save */}
-              {!submitted ? (
-                <div className="border-t border-gray-100 pt-6">
-                  <div className="text-center mb-4">
-                    <h3 className="text-lg font-bold text-gray-900">Want a Detailed Report?</h3>
-                    <p className="text-gray-500 text-sm">Save your prediction and our counsellors will send you a personalised college list</p>
-                  </div>
-                  <button
-                    onClick={handleSaveLead}
-                    disabled={saving}
-                    className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 text-white font-bold py-4 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg shadow-red-200"
-                  >
-                    {saving ? (
-                      <><Loader2 className="w-5 h-5 animate-spin" /> Saving...</>
-                    ) : (
-                      "Save My Prediction & Get Free Counselling"
-                    )}
-                  </button>
-                </div>
-              ) : (
-                <div className="border-t border-gray-100 pt-6 text-center">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Award className="w-8 h-8 text-green-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">Prediction Saved!</h3>
-                  <p className="text-gray-500 mb-4">
-                    Our counsellors will reach out to you within 24 hours with a detailed college prediction report.
-                  </p>
-                  <Link
-                    href="/contact"
-                    className="inline-flex items-center gap-2 text-red-600 font-bold text-sm hover:underline"
-                  >
-                    Need more help? Talk to us directly
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
+              <div className="flex items-start gap-2 text-xs text-gray-500 mb-6">
+                <Info className="w-4 h-4 shrink-0 mt-0.5" />
+                <p>
+                  Based on previous-year MCC closing ranks. <strong>Safe</strong> = comfortably within last year&apos;s cutoff,{" "}
+                  <strong>Moderate</strong> = close to it, <strong>Reach</strong> = possible in later rounds. Cutoffs change every year —
+                  talk to a counsellor before choice filling.
+                </p>
+              </div>
+
+              {/* Latest cutoff news (Google Custom Search) */}
+              {(newsLoading || news.length > 0) && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-bold text-gray-900 mb-2">Latest cutoff updates on the web</h3>
+                  {newsLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                  ) : (
+                    <div className="space-y-2">
+                      {news.map((n) => (
+                        <a
+                          key={n.url}
+                          href={n.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-start justify-between gap-2 bg-gray-50 hover:bg-blue-50 border border-gray-100 rounded-xl p-3 group"
+                        >
+                          <span className="text-xs font-semibold text-gray-800 group-hover:text-blue-700">{n.name}</span>
+                          <ExternalLink className="w-3.5 h-3.5 text-gray-400 shrink-0 mt-0.5" />
+                        </a>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
+
+              <div className="border-t border-gray-100 pt-6 text-center">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">Your prediction is saved</h3>
+                <p className="text-gray-500 text-sm mb-4">
+                  Our counsellors will call you within 24 hours with a detailed college list and choice-filling plan.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link
+                    href="/contact"
+                    className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl"
+                  >
+                    Get Free Counselling <ArrowRight className="w-4 h-4" />
+                  </Link>
+                  <button
+                    onClick={reset}
+                    className="inline-flex items-center justify-center gap-2 border border-gray-200 text-gray-700 font-semibold px-6 py-3 rounded-xl hover:bg-gray-50"
+                  >
+                    <RotateCcw className="w-4 h-4" /> Try another score
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
