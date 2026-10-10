@@ -292,7 +292,7 @@ export const InvoicePDF = ({ student, payments, logoBase64 }: InvoiceProps) => {
               <Text style={styles.companyDetail}>Noida, Uttar Pradesh</Text>
               <Text style={styles.companyDetail}>India</Text>
               <Text style={styles.companyDetail}>Ph: +91 92116 07005</Text>
-              <Text style={styles.companyDetail}>Email: info@hellodoctorindia.com</Text>
+              <Text style={styles.companyDetail}>Email: info@hellodoctoredu.com</Text>
             </View>
             <View style={styles.invoiceBlock}>
               <View style={styles.invoiceBadge}>
@@ -421,7 +421,7 @@ export const InvoicePDF = ({ student, payments, logoBase64 }: InvoiceProps) => {
           <View style={styles.footer}>
             <View>
               <Text style={styles.footerLeft}>This is a computer-generated invoice and is valid without a physical signature.</Text>
-              <Text style={styles.footerLeft}>For queries: +91 92116 07005 | info@hellodoctorindia.com</Text>
+              <Text style={styles.footerLeft}>For queries: +91 92116 07005 | info@hellodoctoredu.com</Text>
               <Text style={[styles.footerLeft, { marginTop: 4, color: ACCENT }]}>Thank you for choosing Hello Doctor!</Text>
             </View>
             <View style={styles.footerRight}>

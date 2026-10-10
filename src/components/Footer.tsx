@@ -123,7 +123,7 @@ export default function Footer() {
             </Link>
 
             <p className="text-gray-400 text-sm leading-relaxed mb-5">
-              Noida-based MBBS &amp; medical admission consultancy helping NEET aspirants secure seats in top medical colleges in India and abroad — with honest, end-to-end guidance.
+              Noida-based medical education consultancy helping NEET aspirants secure seats in top medical colleges in India and abroad — with honest, end-to-end guidance.
             </p>
 
             {/* Social Icons */}
@@ -160,8 +160,7 @@ export default function Footer() {
               <div className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-blue-400 shrink-0" />
                 <div className="text-xs text-gray-400">
-                  <a href="mailto:info@hellodoctorindia.com" className="hover:text-white transition-colors block">info@hellodoctorindia.com</a>
-                  <a href="mailto:admissions@hellodoctorindia.com" className="hover:text-white transition-colors block">admissions@hellodoctorindia.com</a>
+                  <a href="mailto:info@hellodoctoredu.com" className="hover:text-white transition-colors block">info@hellodoctoredu.com</a>
                 </div>
               </div>
               <div className="flex items-center gap-2.5">

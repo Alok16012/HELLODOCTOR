@@ -40,7 +40,7 @@ export default function AboutSection() {
             Your Trusted Partner on the <span className="text-green-600">Medical Path</span>
           </h2>
           <p className="text-gray-600 leading-relaxed mb-4">
-            Hello Doctor is an MBBS admission consultancy that helps NEET UG and NEET PG aspirants find the right
+            Hello Doctor is a medical education consultancy that helps NEET UG and NEET PG aspirants find the right
             medical college. We look at your rank, category, budget and goals — then recommend the options that
             genuinely fit.
           </p>

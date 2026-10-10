@@ -128,7 +128,7 @@ export default function AboutPage() {
                   Guiding NEET Aspirants to<br /><span className="text-blue-600">the Right Medical College</span>
                 </h2>
                 <p className="text-gray-600 text-base leading-relaxed mb-5">
-                  Hello Doctor is a Noida-based MBBS admission consultancy built on a simple belief — every NEET aspirant deserves honest, clear guidance about their real options, whether that's a government medical college in India or a recognised university abroad.
+                  Hello Doctor is a Noida-based medical education consultancy built on a simple belief — every NEET aspirant deserves honest, clear guidance about their real options, whether that's a government medical college in India or a recognised university abroad.
                 </p>
                 <p className="text-gray-600 text-base leading-relaxed mb-6">
                   We work closely with students and parents to understand their NEET score, budget, and goals, and then recommend the path that genuinely fits — with complete support from counselling to admission and beyond.

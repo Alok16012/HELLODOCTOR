@@ -19,7 +19,7 @@ predictor, college details, fees, contact, counsellor hand-off). No AI is used.
 ```bash
 cd whatsapp-bot
 npm install
-SITE_URL=https://hellodoctorindia.com WHATSAPP_BOT_SECRET=<same secret> npm start
+SITE_URL=https://hellodoctoredu.com WHATSAPP_BOT_SECRET=<same secret> npm start
 ```
 
 4. A QR code prints in the terminal. On the business phone open

@@ -8,7 +8,7 @@ import {
 // Rule-based WhatsApp replies (no AI). Every answer comes from the same data the
 // website uses: Supabase colleges, course lists and predictor cutoffs.
 
-const SITE = "https://hellodoctorindia.com";
+const SITE = "https://hellodoctoredu.com";
 const PHONE = "+91 92116 07005";
 
 export interface SiteData {
@@ -69,7 +69,7 @@ function contact(): BotReply {
       "*Hello Doctor — Medical Education Consultancy*\n" +
       "📍 Noida, Uttar Pradesh\n" +
       `📞 ${PHONE} (Call / WhatsApp)\n` +
-      "✉️ info@hellodoctorindia.com\n" +
+      "✉️ info@hellodoctoredu.com\n" +
       "🕘 Mon–Sat 9 AM – 7 PM, Sun 10 AM – 5 PM\n" +
       `🌐 ${SITE}`,
   };

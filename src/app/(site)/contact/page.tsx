@@ -26,9 +26,9 @@ const contactDetails = [
   {
     icon: Mail,
     title: "Email Us",
-    lines: ["info@hellodoctorindia.com", "admissions@hellodoctorindia.com"],
+    lines: ["info@hellodoctoredu.com"],
     color: "bg-purple-50 text-purple-600",
-    links: ["mailto:info@hellodoctorindia.com", "mailto:admissions@hellodoctorindia.com"],
+    links: ["mailto:info@hellodoctoredu.com"],
   },
   {
     icon: Clock,

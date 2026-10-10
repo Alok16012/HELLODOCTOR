@@ -185,7 +185,7 @@ export function SalarySlipPDF({
               <Text style={styles.companyDetail}>Noida, Uttar Pradesh</Text>
               <Text style={styles.companyDetail}>India</Text>
               <Text style={styles.companyDetail}>Ph: +91 92116 07005</Text>
-              <Text style={styles.companyDetail}>Email: info@hellodoctorindia.com</Text>
+              <Text style={styles.companyDetail}>Email: info@hellodoctoredu.com</Text>
             </View>
             <View style={styles.slipBlock}>
               <View style={styles.slipBadge}>
@@ -300,7 +300,7 @@ export function SalarySlipPDF({
           <View style={styles.footer}>
             <View>
               <Text style={styles.footerLeft}>This is a computer-generated salary slip and does not require a physical signature.</Text>
-              <Text style={styles.footerLeft}>For queries: +91 92116 07005 | info@hellodoctorindia.com</Text>
+              <Text style={styles.footerLeft}>For queries: +91 92116 07005 | info@hellodoctoredu.com</Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <View style={styles.signatureLine} />

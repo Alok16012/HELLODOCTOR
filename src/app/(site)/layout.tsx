@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Hello Doctor - Medical Education Consultancy | MBBS Admission in India & Abroad",
-  description: "Noida-based MBBS admission consultancy. Expert NEET counselling and guidance for MBBS admission in India and abroad (Russia, Georgia, Uzbekistan, Kyrgyzstan, Nepal). Call/WhatsApp +91 92116 07005.",
+  title: "Hello Doctor - Medical Education Consultancy in India & Abroad",
+  description: "Noida-based medical education consultancy. Expert NEET counselling and guidance for MBBS admission in India and abroad (Russia, Georgia, Uzbekistan, Kyrgyzstan, Nepal). Call/WhatsApp +91 92116 07005.",
 };
 
 export default function RootLayout({

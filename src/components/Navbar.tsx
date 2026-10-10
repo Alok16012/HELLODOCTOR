@@ -2,7 +2,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Phone, Mail, TrendingUp, Briefcase, GraduationCap, Handshake, ChevronRight } from "lucide-react";
+import EnquiryModal from "@/components/EnquiryModal";
+import { Menu, X, Phone, Mail, MessageSquare, TrendingUp, Briefcase, GraduationCap, Handshake, ChevronRight } from "lucide-react";
 
 const navLinks = [
   { label: "Colleges", href: "/colleges" },
@@ -21,20 +22,21 @@ const loginOptions = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [enquiryOpen, setEnquiryOpen] = useState(false);
 
   return (
     <>
       <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
         {/* Contact Bar */}
         <div className="bg-blue-600 text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-center sm:justify-end gap-4 sm:gap-6 py-1.5 text-xs">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 py-1.5 text-xs">
             <a href="tel:+919211607005" className="flex items-center gap-1.5 hover:text-blue-100">
               <Phone className="w-3.5 h-3.5" />
               +91 92116 07005
             </a>
-            <a href="mailto:info@hellodoctorindia.com" className="flex items-center gap-1.5 hover:text-blue-100">
+            <a href="mailto:info@hellodoctoredu.com" className="flex items-center gap-1.5 hover:text-blue-100">
               <Mail className="w-3.5 h-3.5" />
-              info@hellodoctorindia.com
+              info@hellodoctoredu.com
             </a>
           </div>
         </div>
@@ -78,16 +80,14 @@ export default function Navbar() {
                 <TrendingUp className="w-4 h-4" />
                 NEET Predictor
               </Link>
-              <a
-                href="tel:+919211607005"
-                className="flex items-center gap-1.5 text-sm text-blue-600 border border-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+              <button
+                type="button"
+                onClick={() => setEnquiryOpen(true)}
+                className="flex items-center gap-1.5 text-sm text-blue-600 border-2 border-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-bold"
               >
-                <Phone className="w-4 h-4" />
-                <span className="flex flex-col leading-none">
-                  <span>Counselling</span>
-                  <span className="text-[10px] font-normal text-blue-500">+91 9211607005</span>
-                </span>
-              </a>
+                <MessageSquare className="w-4 h-4" />
+                Enquiry Now
+              </button>
               <button
                 type="button"
                 onClick={() => setLoginOpen(true)}
@@ -130,14 +130,14 @@ export default function Navbar() {
               <TrendingUp className="w-4 h-4" />
               NEET Predictor
             </Link>
-            <a
-              href="tel:+919211607005"
-              className="flex items-center justify-center gap-2 text-sm text-blue-600 border border-blue-600 px-4 py-2 rounded-lg font-medium"
-              onClick={() => setIsOpen(false)}
+            <button
+              type="button"
+              className="flex items-center justify-center gap-2 text-sm text-blue-600 border-2 border-blue-600 px-4 py-2 rounded-lg font-bold"
+              onClick={() => { setIsOpen(false); setEnquiryOpen(true); }}
             >
-              <Phone className="w-4 h-4" />
-              Counselling · +91 9211607005
-            </a>
+              <MessageSquare className="w-4 h-4" />
+              Enquiry Now
+            </button>
             <button
               type="button"
               className="text-center text-sm bg-blue-600 text-white px-4 py-2 rounded-lg font-medium"
@@ -148,6 +148,8 @@ export default function Navbar() {
           </div>
         </div>
       )}
+
+      {enquiryOpen && <EnquiryModal onClose={() => setEnquiryOpen(false)} />}
 
       {/* Login chooser */}
       {loginOpen && (

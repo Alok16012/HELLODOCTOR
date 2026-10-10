@@ -6,7 +6,7 @@
 // the website + Supabase; this file is only the WhatsApp transport.
 //
 // Env:
-//   SITE_URL            e.g. https://hellodoctorindia.com
+//   SITE_URL            e.g. https://hellodoctoredu.com
 //   WHATSAPP_BOT_SECRET same value as on the website (Netlify env)
 //   AUTH_DIR            where the WhatsApp login is stored (default ./auth)
 
