@@ -5,13 +5,13 @@ import { GraduationCap, ChevronRight } from "lucide-react";
 const paths = [
   {
     label: "NEET UG",
-    href: "/streams?tab=ug",
+    href: "/neet-ug",
     className:
       "from-lime-500 via-green-600 to-green-700 shadow-green-600/30 hover:shadow-green-600/40",
   },
   {
     label: "NEET PG",
-    href: "/streams?tab=pg",
+    href: "/neet-pg",
     className:
       "from-blue-500 via-blue-600 to-blue-800 shadow-blue-600/30 hover:shadow-blue-600/40",
   },

@@ -6,6 +6,8 @@ import EnquiryModal from "@/components/EnquiryModal";
 import { Menu, X, Phone, Mail, MessageSquare, TrendingUp, Briefcase, GraduationCap, Handshake, ChevronRight } from "lucide-react";
 
 const navLinks = [
+  { label: "NEET UG", href: "/neet-ug" },
+  { label: "NEET PG", href: "/neet-pg" },
   { label: "Colleges", href: "/colleges" },
   { label: "Streams", href: "/streams" },
   { label: "Blog", href: "/blog" },
@@ -59,12 +61,12 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Links */}
-            <div className="hidden lg:flex items-center gap-6">
+            <div className="hidden xl:flex items-center gap-5">
               {navLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors"
+                  className="text-sm text-gray-600 hover:text-blue-600 font-medium transition-colors whitespace-nowrap"
                 >
                   {link.label}
                 </Link>
@@ -72,7 +74,7 @@ export default function Navbar() {
             </div>
 
             {/* CTA Buttons */}
-            <div className="hidden lg:flex items-center gap-3">
+            <div className="hidden xl:flex items-center gap-3">
               <Link
                 href="/predictor"
                 className="bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2.5 rounded-lg shadow-md shadow-red-200 transition-colors text-sm flex items-center gap-1.5"
@@ -99,7 +101,7 @@ export default function Navbar() {
 
             {/* Mobile Menu Toggle */}
             <button
-              className="lg:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
+              className="xl:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100"
               onClick={() => setIsOpen(!isOpen)}
             >
               {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -110,7 +112,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="lg:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-3">
+        <div className="xl:hidden bg-white border-t border-gray-100 px-4 py-4 space-y-3">
           {navLinks.map((link) => (
             <Link
               key={link.label}
