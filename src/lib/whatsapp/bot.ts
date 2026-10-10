@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { getColleges, getScholarships } from "@/lib/content";
+import { getColleges } from "@/lib/content";
 import { buildReply, MENU_TEXT, type SiteData } from "./replies";
 
 // Handles one incoming WhatsApp message (delivered by the Baileys bridge in
@@ -14,11 +14,8 @@ function adminClient(): SupabaseClient {
 let siteCache: { data: SiteData; at: number } | null = null;
 async function siteData(): Promise<SiteData> {
   if (siteCache && Date.now() - siteCache.at < 60 * 60 * 1000) return siteCache.data;
-  const [colleges, scholarships] = await Promise.all([
-    getColleges().catch(() => []),
-    getScholarships().catch(() => []),
-  ]);
-  siteCache = { data: { colleges, scholarships }, at: Date.now() };
+  const colleges = await getColleges().catch(() => []);
+  siteCache = { data: { colleges }, at: Date.now() };
   return siteCache.data;
 }
 

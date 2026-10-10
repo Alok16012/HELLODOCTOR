@@ -2,13 +2,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, Phone, TrendingUp, Briefcase, GraduationCap, Handshake, ChevronRight } from "lucide-react";
+import { Menu, X, Phone, Mail, TrendingUp, Briefcase, GraduationCap, Handshake, ChevronRight } from "lucide-react";
 
 const navLinks = [
   { label: "Colleges", href: "/colleges" },
   { label: "Streams", href: "/streams" },
   { label: "Blog", href: "/blog" },
-  { label: "Scholarship", href: "/scholarship" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];
@@ -19,13 +18,6 @@ const loginOptions = [
   { label: "Associate", desc: "Partner portal — leads, students & wallet", href: "/crm/login?as=associate", icon: Handshake, color: "bg-teal-50 text-teal-700" },
 ];
 
-const statItems = [
-  { label: "NEET-Based Admission", value: "100%" },
-  { label: "Initial Counselling", value: "Free" },
-  { label: "Support Availability", value: "7 Days" },
-  { label: "Medical Programs", value: "5" },
-];
-
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -33,6 +25,19 @@ export default function Navbar() {
   return (
     <>
       <nav className="sticky top-0 z-50 bg-white shadow-sm border-b border-gray-100">
+        {/* Contact Bar */}
+        <div className="bg-blue-600 text-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-center sm:justify-end gap-4 sm:gap-6 py-1.5 text-xs">
+            <a href="tel:+919211607005" className="flex items-center gap-1.5 hover:text-blue-100">
+              <Phone className="w-3.5 h-3.5" />
+              +91 92116 07005
+            </a>
+            <a href="mailto:info@hellodoctorindia.com" className="flex items-center gap-1.5 hover:text-blue-100">
+              <Mail className="w-3.5 h-3.5" />
+              info@hellodoctorindia.com
+            </a>
+          </div>
+        </div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -47,7 +52,7 @@ export default function Navbar() {
               />
               <div className="flex flex-col leading-none">
                 <span className="text-lg font-black text-blue-900 tracking-wide">Hello Doctor</span>
-                <span className="text-[10px] font-semibold text-blue-600 tracking-tight">MBBS Admission Consultancy</span>
+                <span className="text-[10px] font-semibold text-blue-600 tracking-tight">Medical Education Consultancy</span>
               </div>
             </Link>
 
@@ -99,20 +104,6 @@ export default function Navbar() {
             >
               {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-          </div>
-        </div>
-
-        {/* Stats Bar */}
-        <div className="bg-blue-600">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="flex items-center justify-center gap-6 sm:gap-10 py-2.5 text-white">
-              {statItems.map((item) => (
-                <div key={item.label} className="text-center">
-                  <div className="text-sm sm:text-base font-bold leading-tight">{item.value}</div>
-                  <div className="text-[10px] sm:text-xs text-blue-200 leading-tight">{item.label}</div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       </nav>

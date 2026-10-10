@@ -24,6 +24,19 @@ export const CATEGORY_FACTOR: Record<Category, number> = {
   st: 7,
 };
 
+export type Quota = "aiq" | "state";
+
+export const INDIAN_STATES = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chandigarh", "Chhattisgarh", "Delhi", "Goa", "Gujarat",
+  "Haryana", "Himachal Pradesh", "J&K", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+  "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana",
+  "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+];
+
+// State-quota closing ranks are usually well above (easier than) the same college's
+// AIQ closing rank. Until real state cutoffs are loaded, estimate them from AIQ.
+export const STATE_QUOTA_FACTOR = 1.5;
+
 export const MAX_SCORE: Record<NeetType, number> = { ug: 720, pg: 800 };
 export const TOTAL_CANDIDATES: Record<NeetType, number> = { ug: 2200000, pg: 230000 };
 
@@ -169,7 +182,19 @@ export const PG_BANDS: PgBand[] = [
   { maxRank: Infinity, title: "Pre-clinical / DNB / management quota", branches: "Anatomy, Physiology, Biochemistry, Forensic Medicine", where: "Government pre-clinical; clinical via DNB, deemed or management quota" },
 ];
 
-export type Chance = "Safe" | "Moderate" | "Reach";
+// Safe: well inside last year's closing rank · Moderate: close to it ·
+// Risky: just outside (later rounds) · Dream: needs cutoffs to move a lot.
+export type Chance = "Safe" | "Moderate" | "Risky" | "Dream";
+export const CHANCES: Chance[] = ["Safe", "Moderate", "Risky", "Dream"];
+
+export function chanceFor(rank: number, closing: number): Chance | null {
+  const r = rank / closing;
+  if (r <= 0.85) return "Safe";
+  if (r <= 1) return "Moderate";
+  if (r <= 1.25) return "Risky";
+  if (r <= 1.6) return "Dream";
+  return null;
+}
 
 export interface CollegeMatch extends UgCollege {
   chance: Chance;
@@ -180,23 +205,25 @@ export function predictUgColleges(
   rank: number,
   category: Category,
   includeDeemed: boolean,
+  quota: Quota = "aiq",
+  state?: string,
 ): CollegeMatch[] {
   const factor = CATEGORY_FACTOR[category];
   const matches: CollegeMatch[] = [];
   for (const c of UG_COLLEGES) {
     if (c.type === "Deemed" && !includeDeemed) continue;
+    // State quota: only that state's government colleges (deemed seats are filled by MCC).
+    if (quota === "state" && (c.type === "Deemed" || c.state !== state)) continue;
     // Deemed seats have no category reservation.
-    const adjusted = Math.round(c.closingRank * (c.type === "Deemed" ? 1 : factor));
-    let chance: Chance | null = null;
-    if (rank <= adjusted * 0.85) chance = "Safe";
-    else if (rank <= adjusted * 1.1) chance = "Moderate";
-    else if (rank <= adjusted * 1.35) chance = "Reach";
+    const adjusted = Math.round(
+      c.closingRank * (c.type === "Deemed" ? 1 : factor) * (quota === "state" ? STATE_QUOTA_FACTOR : 1),
+    );
+    const chance = chanceFor(rank, adjusted);
     if (chance) matches.push({ ...c, chance, adjustedClosingRank: adjusted });
   }
-  const order: Record<Chance, number> = { Moderate: 0, Reach: 1, Safe: 2 };
-  // Best-fit first: colleges closest to the student's rank, then safer picks.
+  // Grouped by chance, best colleges (lowest closing rank) first within each group.
   return matches.sort(
-    (a, b) => order[a.chance] - order[b.chance] || a.adjustedClosingRank - b.adjustedClosingRank,
+    (a, b) => CHANCES.indexOf(a.chance) - CHANCES.indexOf(b.chance) || a.adjustedClosingRank - b.adjustedClosingRank,
   );
 }
 
@@ -313,20 +340,22 @@ export interface PgCollegeMatch extends PgCollege {
   branches: BranchChance[];
 }
 
-function chanceFor(rank: number, closing: number): Chance | null {
-  if (rank <= closing * 0.85) return "Safe";
-  if (rank <= closing * 1.1) return "Moderate";
-  if (rank <= closing * 1.35) return "Reach";
-  return null;
-}
-
-export function predictPgColleges(rank: number, category: Category, includeDeemed: boolean): PgCollegeMatch[] {
+export function predictPgColleges(
+  rank: number,
+  category: Category,
+  includeDeemed: boolean,
+  quota: Quota = "aiq",
+  state?: string,
+): PgCollegeMatch[] {
   const factor = CATEGORY_FACTOR[category];
   const out: PgCollegeMatch[] = [];
   for (const c of PG_COLLEGES) {
     if (c.tier === "deemed" && !includeDeemed) continue;
+    // State quota (50%): only that state's government colleges.
+    if (quota === "state" && (c.tier === "deemed" || c.tier === "dnb" || c.state !== state)) continue;
     const t = PG_TIER[c.tier];
-    const catFactor = c.tier === "deemed" ? 1 : factor; // no reservation in deemed seats
+    // No reservation in deemed seats.
+    const catFactor = (c.tier === "deemed" ? 1 : factor) * (quota === "state" ? STATE_QUOTA_FACTOR : 1);
     const branches: BranchChance[] = [];
     for (const b of PG_BRANCHES) {
       const closing = Math.round((b.base * t.mult + t.add) * catFactor);
@@ -354,7 +383,7 @@ export interface BranchSummary {
 
 /**
  * Per branch, in preference order: the best-ranked college where the student has a
- * Safe/Moderate chance (else the best Reach college), that college's chance, and
+ * Safe/Moderate chance (else the best Risky/Dream college), that college's chance, and
  * how many colleges offer the branch at this rank.
  */
 export function pgBranchSummary(matches: PgCollegeMatch[]): BranchSummary[] {
@@ -366,7 +395,7 @@ export function pgBranchSummary(matches: PgCollegeMatch[]): BranchSummary[] {
       return hit ? [{ college: m.name, chance: hit.chance }] : [];
     });
     if (!offers.length) continue;
-    const pick = offers.find((o) => o.chance !== "Reach") ?? offers[0];
+    const pick = offers.find((o) => o.chance === "Safe" || o.chance === "Moderate") ?? offers[0];
     out.push({ branch: b.name, degree: b.degree, chance: pick.chance, colleges: offers.length, bestCollege: pick.college });
   }
   return out;

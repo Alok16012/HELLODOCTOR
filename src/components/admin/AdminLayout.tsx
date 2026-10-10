@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
-import { LayoutDashboard, Building2, BookOpen, Award, Inbox, LogOut, Menu, ExternalLink } from 'lucide-react'
+import { LayoutDashboard, Building2, BookOpen, Inbox, LogOut, Menu, ExternalLink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 const navLinks = [
@@ -12,7 +12,6 @@ const navLinks = [
   { href: '/admin/leads', label: 'Leads', icon: Inbox },
   { href: '/admin/colleges', label: 'Colleges', icon: Building2 },
   { href: '/admin/blogs', label: 'Blogs', icon: BookOpen },
-  { href: '/admin/scholarships', label: 'Scholarships', icon: Award },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

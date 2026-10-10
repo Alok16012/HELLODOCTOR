@@ -66,7 +66,6 @@ const countryLinkMap: Record<string, string> = {
 
 const quickLinkMap: Record<string, string> = {
   "NEET Counselling": "/colleges",
-  "Scholarship": "/scholarship",
   "Compare Universities": "/colleges",
   "Blog": "/blog",
   "About Us": "/about",
@@ -76,7 +75,7 @@ const quickLinkMap: Record<string, string> = {
 const footerLinks = {
   Streams: ["MBBS India", "MBBS Abroad", "BDS", "BAMS", "BHMS", "Nursing"],
   Countries: ["Russia", "Georgia", "Uzbekistan", "Kyrgyzstan", "Nepal", "Kazakhstan", "Philippines", "Mauritius"],
-  Quick: ["NEET Counselling", "Scholarship", "Compare Universities", "Blog", "About Us", "Contact Us"],
+  Quick: ["NEET Counselling", "Compare Universities", "Blog", "About Us", "Contact Us"],
 };
 
 export default function Footer() {
@@ -87,7 +86,7 @@ export default function Footer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div>
             <h3 className="text-white text-xl font-bold mb-1">Get NEET & MBBS Admission Updates</h3>
-            <p className="text-blue-200 text-sm">Never miss a deadline. Subscribe for NEET counselling dates, seat availability & scholarship offers.</p>
+            <p className="text-blue-200 text-sm">Never miss a deadline. Subscribe for NEET counselling dates, seat availability & admission updates.</p>
           </div>
           <div className="flex w-full sm:w-auto gap-2">
             <input
@@ -119,7 +118,7 @@ export default function Footer() {
               />
               <div className="flex flex-col leading-none">
                 <span className="text-lg font-black text-white tracking-wide">Hello Doctor</span>
-                <span className="text-[10px] font-semibold text-blue-400 tracking-tight">MBBS Admission Consultancy</span>
+                <span className="text-[10px] font-semibold text-blue-400 tracking-tight">Medical Education Consultancy</span>
               </div>
             </Link>
 

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Inbox, Building2, BookOpen, Award, BellDot } from 'lucide-react'
+import { Inbox, Building2, BookOpen, BellDot } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import AdminLayout from '@/components/admin/AdminLayout'
 
@@ -32,10 +32,9 @@ export default function AdminDashboard() {
       count('enquiries', ['status', 'new']),
       count('colleges'),
       count('blogs'),
-      count('scholarships'),
       supabase.from('enquiries').select('id, name, phone, course, status, created_at').order('created_at', { ascending: false }).limit(6),
-    ]).then(([leads, newLeads, colleges, blogs, scholarships, recentRes]) => {
-      setStats({ leads, newLeads, colleges, blogs, scholarships })
+    ]).then(([leads, newLeads, colleges, blogs, recentRes]) => {
+      setStats({ leads, newLeads, colleges, blogs })
       setRecent((recentRes.data as RecentLead[]) ?? [])
     })
   }, [])
@@ -45,7 +44,6 @@ export default function AdminDashboard() {
     { label: 'Total Leads', key: 'leads', href: '/admin/leads', icon: Inbox, color: 'bg-green-50 text-green-600' },
     { label: 'Colleges', key: 'colleges', href: '/admin/colleges', icon: Building2, color: 'bg-blue-50 text-blue-600' },
     { label: 'Blogs', key: 'blogs', href: '/admin/blogs', icon: BookOpen, color: 'bg-purple-50 text-purple-600' },
-    { label: 'Scholarships', key: 'scholarships', href: '/admin/scholarships', icon: Award, color: 'bg-yellow-50 text-yellow-600' },
   ]
 
   return (

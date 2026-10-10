@@ -1,5 +1,4 @@
 import type { College } from "@/data/colleges";
-import type { Scholarship } from "@/data/scholarships";
 import { pgCourses } from "@/data/pg-courses";
 import {
   CATEGORIES, MAX_SCORE, UG_QUALIFYING_MARKS, estimateRank, isUgQualified, pgBandFor, pgBranchSummary, predictPgColleges, predictUgColleges, ugAlternatives,
@@ -7,14 +6,13 @@ import {
 } from "@/data/neet-predictor";
 
 // Rule-based WhatsApp replies (no AI). Every answer comes from the same data the
-// website uses: Supabase colleges/scholarships, course lists and predictor cutoffs.
+// website uses: Supabase colleges, course lists and predictor cutoffs.
 
 const SITE = "https://hellodoctorindia.com";
 const PHONE = "+91 92116 07005";
 
 export interface SiteData {
   colleges: College[];
-  scholarships: Scholarship[];
 }
 
 export interface BotReply {
@@ -31,7 +29,6 @@ const MENU: { id: string; label: string }[] = [
   { id: "pg", label: "NEET PG Courses (MD, MS, DNB...)" },
   { id: "abroad", label: "MBBS Abroad" },
   { id: "colleges", label: "Top Colleges & Fees" },
-  { id: "scholarship", label: "Scholarships" },
   { id: "contact", label: "Office & Contact" },
   { id: "counsellor", label: "Talk to Counsellor" },
 ];
@@ -69,7 +66,7 @@ function counsellor(): BotReply {
 function contact(): BotReply {
   return {
     text:
-      "*Hello Doctor — MBBS Admission Consultancy*\n" +
+      "*Hello Doctor — Medical Education Consultancy*\n" +
       "📍 Noida, Uttar Pradesh\n" +
       `📞 ${PHONE} (Call / WhatsApp)\n` +
       "✉️ info@hellodoctorindia.com\n" +
@@ -127,16 +124,6 @@ function collegesInfo(data: SiteData): BotReply {
       "*Top Colleges on Hello Doctor* 🏥\n" +
       (top.length ? top.map((c) => `- *${c.shortName || c.name}* (${c.type}), ${c.city} — ${c.feesDisplay}`).join("\n") + "\n" : "") +
       `Poori list: ${SITE}/colleges\nKisi college ka naam likhiye, uski details bhej denge.`,
-  };
-}
-
-function scholarshipInfo(data: SiteData): BotReply {
-  const list = data.scholarships.slice(0, 5);
-  return {
-    text:
-      "*Medical Scholarships* 🎓\n" +
-      (list.length ? list.map((s) => `- *${s.shortName || s.name}* — ${s.amountDisplay} (${s.provider})`).join("\n") + "\n" : "") +
-      `Sab scholarships & eligibility: ${SITE}/scholarship`,
   };
 }
 
@@ -271,7 +258,7 @@ function collegeDetails(list: College[]): BotReply {
 // ── Router ─────────────────────────────────────────────────────────────────
 
 export function buildReply(rawText: string | null, data: SiteData, profileName?: string): BotReply {
-  const choice = rawText?.trim().match(/^([1-8])\.?$/);
+  const choice = rawText?.trim().match(/^([1-7])\.?$/);
   const menuId = choice ? MENU[Number(choice[1]) - 1].id : null;
   switch (menuId) {
     case "predictor": return predictorHelp();
@@ -279,7 +266,6 @@ export function buildReply(rawText: string | null, data: SiteData, profileName?:
     case "pg": return pgInfo();
     case "abroad": return abroadInfo(data);
     case "colleges": return collegesInfo(data);
-    case "scholarship": return scholarshipInfo(data);
     case "contact": return contact();
     case "counsellor": return counsellor();
   }
@@ -304,7 +290,6 @@ export function buildReply(rawText: string | null, data: SiteData, profileName?:
   if (hasWord(text, ["predict", "predictor", "cutoff", "chance", "chances", "milega", "mil"])) return predictorHelp();
   if (hasWord(text, ["abroad", "russia", "georgia", "uzbekistan", "kyrgyzstan", "nepal", "kazakhstan", "foreign", "videsh", "bahar"])) return abroadInfo(data);
   if (hasWord(text, ["pg", "md", "ms", "mds", "dnb", "diploma", "postgraduate"])) return pgInfo();
-  if (hasWord(text, ["scholarship", "scholarships"])) return scholarshipInfo(data);
   if (hasWord(text, ["fee", "fees", "cost", "kitna", "kitni", "budget", "paisa", "kharcha"])) return feesInfo();
   if (hasWord(text, ["address", "office", "location", "kahan", "contact", "number", "phone", "email", "timing"])) return contact();
   if (hasWord(text, ["ug", "mbbs", "bds", "bams", "bhms", "nursing", "course", "courses"])) return ugInfo();

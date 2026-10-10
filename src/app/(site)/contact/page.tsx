@@ -161,7 +161,7 @@ export default function ContactPage() {
               <span className="text-blue-300">Hello Doctor</span>
             </h1>
             <p className="text-blue-200 text-lg max-w-2xl mx-auto">
-              Have questions about MBBS admission in India or abroad, NEET counselling, or scholarships?
+              Have questions about MBBS admission in India or abroad, or NEET counselling?
               Our expert team is ready to guide you every step of the way.
             </p>
           </div>
@@ -280,7 +280,6 @@ export default function ContactPage() {
                       <option>BHMS</option>
                       <option>Nursing</option>
                       <option>NEET Counselling</option>
-                      <option>Scholarship Guidance</option>
                       <option>Other</option>
                     </select>
                   </div>

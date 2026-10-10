@@ -40,7 +40,6 @@ const services = [
   { title: "Documentation & Application", desc: "Complete help with paperwork, eligibility certificates, and university application filing", icon: "📋" },
   { title: "Visa & Travel Support", desc: "Guidance on visa processing, travel arrangements, and accommodation for students going abroad", icon: "✈️" },
   { title: "BDS, BAMS & BHMS Guidance", desc: "Admission support for dental, ayurvedic and homeopathic medical programs in India", icon: "⚕️" },
-  { title: "Scholarship Assistance", desc: "Helping eligible students identify and apply for relevant government and university scholarships", icon: "🎓" },
 ];
 
 const process = [
@@ -78,11 +77,11 @@ export default function AboutPage() {
               <Stethoscope className="w-16 h-16 text-blue-200" />
             </div>
             <div className="inline-flex items-center gap-2 bg-white/15 text-white text-sm font-medium px-4 py-2 rounded-full mb-4 border border-white/20">
-              <Award className="w-4 h-4 text-yellow-300" /> Noida-Based MBBS Admission Consultancy
+              <Award className="w-4 h-4 text-yellow-300" /> Noida-Based Medical Education Consultancy
             </div>
             <h1 className="text-3xl sm:text-5xl font-bold text-white mb-4 leading-tight">
               Hello Doctor<br />
-              <span className="text-blue-200 text-2xl sm:text-3xl font-semibold">MBBS Admission Consultancy</span>
+              <span className="text-blue-200 text-2xl sm:text-3xl font-semibold">Medical Education Consultancy</span>
             </h1>
             <p className="text-blue-100 text-lg max-w-3xl mx-auto mb-8">
               We help NEET aspirants find the right path to becoming a doctor — MBBS admission guidance for India and abroad, with honesty, expertise, and heart.
