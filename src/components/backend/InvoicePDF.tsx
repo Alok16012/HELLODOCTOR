@@ -265,16 +265,51 @@ const styles = StyleSheet.create({
   },
 })
 
+/** A one-off receipt for whatever amount was received; not tied to the fee plan. */
+export interface ReceiptDetails {
+  amount: number
+  date: string
+  mode: string
+  description: string
+  reference?: string
+}
+
 interface InvoiceProps {
   student: Student
   payments: Payment[]
   logoBase64?: string
+  /** When set, renders a RECEIPT for this amount instead of the full invoice. */
+  receipt?: ReceiptDetails
 }
 
-export const InvoicePDF = ({ student, payments, logoBase64 }: InvoiceProps) => {
+const ONES = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen']
+const TENS = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety']
+
+function twoDigits(n: number): string {
+  return n < 20 ? ONES[n] : `${TENS[Math.floor(n / 10)]}${n % 10 ? ' ' + ONES[n % 10] : ''}`
+}
+
+/** Indian numbering: 1,25,000 -> "One Lakh Twenty Five Thousand Rupees Only". */
+export function amountInWords(amount: number): string {
+  let n = Math.floor(amount)
+  if (n === 0) return 'Zero Rupees Only'
+  const parts: string[] = []
+  for (const [size, name] of [[10000000, 'Crore'], [100000, 'Lakh'], [1000, 'Thousand'], [100, 'Hundred']] as const) {
+    if (n >= size) {
+      parts.push(`${size === 10000000 ? amountInWords(Math.floor(n / size)).replace(' Rupees Only', '') : twoDigits(Math.floor(n / size))} ${name}`)
+      n %= size
+    }
+  }
+  if (n) parts.push(twoDigits(n))
+  const paise = Math.round((amount - Math.floor(amount)) * 100)
+  return `${parts.join(' ')} Rupees${paise ? ` and ${twoDigits(paise)} Paise` : ''} Only`
+}
+
+export const InvoicePDF = ({ student, payments, logoBase64, receipt }: InvoiceProps) => {
   const totalPaid = payments.reduce((sum, p) => sum + p.amount, 0)
   const balance = (student.total_fee || 0) - totalPaid
   const invoiceNo = `HD-${student.enrollment_date ? format(new Date(student.enrollment_date), 'yyyyMM') : format(new Date(), 'yyyyMM')}-${student.id.slice(-4).toUpperCase()}`
+  const receiptNo = receipt ? `HDR-${format(new Date(receipt.date), 'yyyyMMdd')}-${student.id.slice(-4).toUpperCase()}` : ''
 
   return (
     <Document>
@@ -296,10 +331,10 @@ export const InvoicePDF = ({ student, payments, logoBase64 }: InvoiceProps) => {
             </View>
             <View style={styles.invoiceBlock}>
               <View style={styles.invoiceBadge}>
-                <Text style={styles.invoiceTitle}>INVOICE</Text>
+                <Text style={styles.invoiceTitle}>{receipt ? 'RECEIPT' : 'INVOICE'}</Text>
               </View>
-              <Text style={styles.invoiceNumber}>{invoiceNo}</Text>
-              <Text style={styles.invoiceMeta}>Date: {format(new Date(), 'dd MMMM yyyy')}</Text>
+              <Text style={styles.invoiceNumber}>{receipt ? receiptNo : invoiceNo}</Text>
+              <Text style={styles.invoiceMeta}>Date: {format(receipt ? new Date(receipt.date) : new Date(), 'dd MMMM yyyy')}</Text>
               {student.enrollment_date && (
                 <Text style={styles.invoiceMeta}>Enrolled: {format(new Date(student.enrollment_date), 'dd MMM yyyy')}</Text>
               )}
@@ -367,6 +402,50 @@ export const InvoicePDF = ({ student, payments, logoBase64 }: InvoiceProps) => {
             </View>
           </View>
 
+{receipt ? (
+          <>
+          {/* Payment Received */}
+          <Text style={styles.tableTitle}>Payment Received</Text>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderText, styles.cSno]}>#</Text>
+            <Text style={[styles.tableHeaderText, styles.cDate]}>Date</Text>
+            <Text style={[styles.tableHeaderText, styles.cDesc]}>Description</Text>
+            <Text style={[styles.tableHeaderText, styles.cMode]}>Mode</Text>
+            <Text style={[styles.tableHeaderText, styles.cReceipt]}>Ref.</Text>
+            <Text style={[styles.tableHeaderText, styles.cAmt]}>Amount</Text>
+          </View>
+          <View style={styles.tableRow}>
+            <Text style={[styles.tableCell, styles.cSno]}>1</Text>
+            <Text style={[styles.tableCell, styles.cDate]}>{format(new Date(receipt.date), 'dd MMM yyyy')}</Text>
+            <Text style={[styles.tableCell, styles.cDesc]}>{receipt.description || 'Course Fee Payment'}</Text>
+            <Text style={[styles.tableCell, styles.cMode]}>{receipt.mode.toUpperCase()}</Text>
+            <Text style={[styles.tableCell, styles.cReceipt]}>{receipt.reference || '-'}</Text>
+            <Text style={[styles.tableCell, styles.cAmt]}>₹{receipt.amount.toLocaleString('en-IN')}</Text>
+          </View>
+
+          {/* Summary */}
+          <View style={styles.summaryRow}>
+            <View style={[styles.summaryBox, { width: 260 }]}>
+              <View style={styles.summaryHeader}>
+                <Text style={styles.summaryHeaderText}>Receipt Summary</Text>
+              </View>
+              <View style={styles.summaryLine}>
+                <Text style={styles.summaryLabel}>Payment Mode</Text>
+                <Text style={styles.summaryValue}>{receipt.mode}</Text>
+              </View>
+              <View style={styles.summaryLine}>
+                <Text style={[styles.summaryLabel, { flex: 1 }]}>{amountInWords(receipt.amount)}</Text>
+              </View>
+              <View style={styles.summaryTotal}>
+                <Text style={styles.summaryTotalLabel}>Amount Received</Text>
+                <Text style={[styles.summaryTotalValue, { color: '#16a34a' }]}>₹{receipt.amount.toLocaleString('en-IN')}</Text>
+              </View>
+            </View>
+          </View>
+
+          </>
+          ) : (
+          <>
           {/* Payment Table */}
           <Text style={styles.tableTitle}>Payment History</Text>
           <View style={styles.tableHeader}>
@@ -417,10 +496,13 @@ export const InvoicePDF = ({ student, payments, logoBase64 }: InvoiceProps) => {
             </View>
           </View>
 
+          </>
+          )}
+
           {/* Footer */}
           <View style={styles.footer}>
             <View>
-              <Text style={styles.footerLeft}>This is a computer-generated invoice and is valid without a physical signature.</Text>
+              <Text style={styles.footerLeft}>This is a computer-generated {receipt ? 'receipt' : 'invoice'} and is valid without a physical signature.</Text>
               <Text style={styles.footerLeft}>For queries: +91 92116 07005 | info@hellodoctoredu.com</Text>
               <Text style={[styles.footerLeft, { marginTop: 4, color: ACCENT }]}>Thank you for choosing Hello Doctor!</Text>
             </View>

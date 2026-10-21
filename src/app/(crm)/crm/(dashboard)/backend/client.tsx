@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useTransition, useRef, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { format } from 'date-fns'
-import { MoreVertical, Pencil, FileText, Search, Trash2, Download, ChevronLeft, ChevronRight, UserPlus, CheckCircle2, Clock, XCircle, GraduationCap, Award, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
+import { MoreVertical, Pencil, FileText, Receipt, Search, Trash2, Download, ChevronLeft, ChevronRight, UserPlus, CheckCircle2, Clock, XCircle, GraduationCap, Award, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -28,6 +28,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { StudentForm } from '@/components/backend/StudentForm'
 import { PrintInvoiceButton } from '@/components/backend/PrintInvoiceButton'
 import { SendInvoiceWhatsAppButton } from '@/components/backend/SendInvoiceWhatsAppButton'
+import { ReceiptDialog } from '@/components/backend/ReceiptDialog'
 import { toast } from 'sonner'
 import { formatCurrency, type Student } from '@/types/app.types'
 
@@ -97,6 +98,7 @@ export function BackendListClient() {
   const [boards, setBoards] = useState<BoardOption[]>([])
   const [allBoardCounts, setAllBoardCounts] = useState<Record<string, number>>({})
   const [editStudent, setEditStudent] = useState<Student | null>(null)
+  const [receiptStudent, setReceiptStudent] = useState<Student | null>(null)
   const [deleteStudent, setDeleteStudent] = useState<Student | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -584,6 +586,10 @@ export function BackendListClient() {
             <div onClick={(e) => e.stopPropagation()}>
               <SendInvoiceWhatsAppButton student={row.original} />
             </div>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setReceiptStudent(row.original) }}>
+              <Receipt className="mr-2 h-4 w-4" />
+              Receipt
+            </DropdownMenuItem>
             <DropdownMenuItem
               className="text-red-500 focus:text-red-600 focus:bg-red-50"
               onClick={(e) => { e.stopPropagation(); setDeleteStudent(row.original) }}
@@ -713,6 +719,10 @@ export function BackendListClient() {
                               <div onClick={(e) => e.stopPropagation()}>
                                 <SendInvoiceWhatsAppButton student={s} />
                               </div>
+                              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setReceiptStudent(s) }}>
+                                <Receipt className="mr-2 h-4 w-4" />
+                                Receipt
+                              </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                           <Button
@@ -1040,6 +1050,8 @@ export function BackendListClient() {
           )}
         </DialogContent>
       </Dialog>
+
+      <ReceiptDialog student={receiptStudent} onClose={() => setReceiptStudent(null)} />
 
       {/* Reject Student Dialog */}
       <Dialog open={!!rejectTarget} onOpenChange={open => !open && setRejectTarget(null)}>
