@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { supabase } from "@/lib/supabase";
 import {
   TrendingUp, Phone, ArrowLeft, ArrowRight, Loader2, ExternalLink, Building2, Info, Pencil,
-  ShieldCheck, Target, Flame, Sparkles, ClipboardList, GraduationCap,
+  ShieldCheck, Target, Flame, Sparkles, ClipboardList,
 } from "lucide-react";
 import {
   CATEGORIES, INDIAN_STATES, MAX_SCORE, TOTAL_CANDIDATES, UG_QUALIFYING_MARKS, estimateRank, isUgQualified,
@@ -14,9 +14,11 @@ import {
   type Category, type NeetType, type PgBand, type Quota,
 } from "@/data/neet-predictor";
 import {
-  CHANCES, EXAM, QUOTA_LABEL, TYPE_LABEL, predict, type Chance, type PgCollege, type Prediction, type UgCollege,
+  CHANCES, EXAM, QUOTA_LABEL, TYPE_LABEL, predict, type Chance, type Prediction, type UgCollege,
 } from "@/lib/neet/meta";
 import { useColleges, useCutoffs } from "@/lib/neet/useNeetData";
+import { PgResults, PgSelectionFields, usePgData } from "@/components/neet/PgPredictor";
+import { EMPTY_SELECTION, predictPg, selectionComplete, type PgSelection } from "@/lib/neet/pgPredict";
 
 type Step = 1 | 2 | 3;
 type UgFilter = "all" | "govt" | "bds" | "deemed";
@@ -31,9 +33,11 @@ interface Result {
   qualified: boolean;
   rank: number;
   rankIsEstimate: boolean;
-  /** UG: one entry per college × course × quota; PG: per college × branch × quota. */
+  /** UG only: one entry per college × course × quota. PG results are computed by PgResults. */
   matches: Prediction[];
   pgBand: PgBand | null;
+  /** PG: number of college-branch options at default filters (for the saved lead). */
+  pgCount: number;
   alternatives: string[];
 }
 
@@ -54,6 +58,8 @@ const ugFilters: { value: UgFilter; label: string }[] = [
 ];
 
 const fmt = (n: number) => n.toLocaleString("en-IN");
+// Rough mapping of AIQ category labels to the band estimator used when nothing matches.
+const PG_CATEGORY: Record<string, Category> = { GEN: "general", EWS: "ews", OBC: "obc", SC: "sc", ST: "st" };
 
 // Store Indian numbers as 10 digits (matches the rest of the CRM), whatever the user typed.
 function normalizeMobile(input: string): string {
@@ -79,6 +85,7 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
   const [category, setCategory] = useState<Category>("general");
   const [quota, setQuota] = useState<Quota>("aiq");
   const [state, setState] = useState("");
+  const [pgSel, setPgSel] = useState<PgSelection>(EMPTY_SELECTION);
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [prediction, setPrediction] = useState<Result | null>(null);
@@ -89,11 +96,12 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
   const [showAll, setShowAll] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Official MCC closing ranks: latest year (+ the year before for comparison).
+  // UG: official MCC closing ranks (latest year + the year before). PG: institution cutoffs incl. state quotas.
   const latestYear = EXAM[type].latestYear;
-  const { colleges } = useColleges(type);
-  const { rows } = useCutoffs(type, [latestYear, latestYear - 1]);
-  const dataReady = !!rows && !!colleges;
+  const { colleges } = useColleges("ug");
+  const { rows } = useCutoffs("ug", [EXAM.ug.latestYear, EXAM.ug.latestYear - 1]);
+  const pgData = usePgData(type === "pg");
+  const dataReady = type === "pg" ? !!pgData : !!rows && !!colleges;
   const collegeById = new Map((colleges ?? []).map((c) => [c.id, c]));
   const nameOf = (id: number) => collegeById.get(id)?.name ?? "College";
 
@@ -102,9 +110,11 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
   const marksNum = Number(marksInput);
   const rankValid = rankInput !== "" && Number.isInteger(rankNum) && rankNum >= 1 && rankNum <= TOTAL_CANDIDATES[type];
   const marksValid = marksInput !== "" && Number.isFinite(marksNum) && marksNum >= 0 && marksNum <= MAX_SCORE[type];
-  const inputValid = (useMarks ? marksValid : rankValid) && (quota === "aiq" || state !== "");
-  const categoryLabel = CATEGORIES.find((c) => c.value === category)?.label;
-  const quotaLabel = quota === "aiq" ? "All India Quota" : `${state} State Quota`;
+  const inputValid = (useMarks ? marksValid : rankValid) && (type === "pg" ? selectionComplete(pgSel) : quota === "aiq" || state !== "");
+  const categoryLabel = type === "pg" ? pgSel.category : CATEGORIES.find((c) => c.value === category)?.label;
+  const quotaLabel = type === "pg"
+    ? `${pgSel.counselling === "AIQ" ? "All India" : pgSel.states.join(", ")} · ${pgSel.quota}`
+    : quota === "aiq" ? "All India Quota" : `${state} State Quota`;
 
   const saveLead = (p: Result) => {
     const input = useMarks ? `Score ${marksNum}/${MAX_SCORE[type]}, ` : "";
@@ -115,9 +125,7 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
         ? `${input}${rankText}, ${categoryLabel}, ${quotaLabel}. ` +
           `${p.matches.length} colleges matched${p.matches[0] ? ` (e.g. ${nameOf(p.matches[0].college)} — ${p.matches[0].chance})` : ""}.`
         : `${input}${rankText}, ${categoryLabel}, ${quotaLabel}. ` +
-          (p.matches[0]
-            ? `${p.matches.length} college-branch options; e.g. ${p.matches[0].course} at ${nameOf(p.matches[0].college)} (${p.matches[0].chance}).`
-            : `${p.pgBand?.title}.`);
+          (p.pgCount ? `${p.pgCount} college-branch options matched.` : `${p.pgBand?.title}.`);
     // Fire-and-forget: the prediction shows even if saving fails.
     supabase
       .from("enquiries")
@@ -139,7 +147,7 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
       const query =
         type === "ug"
           ? `NEET UG ${new Date().getFullYear()} ${quota === "state" ? `${state} state quota` : "MCC AIQ"} closing rank MBBS rank ${rank}`
-          : `NEET PG ${new Date().getFullYear()} ${quota === "state" ? `${state} state quota` : ""} closing rank branch wise rank ${rank}`;
+          : `NEET PG ${new Date().getFullYear()} ${pgSel.counselling === "STATE" ? `${pgSel.states[0]} state quota` : ""} closing rank branch wise rank ${rank}`;
       const res = await fetch("/api/predictor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -157,11 +165,11 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
   const detailsValid = name.trim() !== "" && mobileDigits.length === 10;
 
   const handlePredict = () => {
-    if (!inputValid || !detailsValid || !rows || !colleges) return;
+    if (!inputValid || !detailsValid || !dataReady) return;
     const rankIsEstimate = useMarks;
     const rank = rankIsEstimate ? estimateRank(type, marksNum) : rankNum;
     const qualified = type === "pg" || (useMarks ? isUgQualified("score", marksNum, category) : isUgQualified("rank", rankNum, category));
-    const matches = qualified
+    const matches = qualified && type === "ug" && rows && colleges
       ? predict(type, rows, {
           rank, category: CAT_CODE[category], quota, state, year: latestYear,
           collegeState: new Map(colleges.map((c) => [c.id, c.state])),
@@ -173,7 +181,8 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
       rank,
       rankIsEstimate,
       matches,
-      pgBand: type === "pg" ? pgBandFor(rank, category) : null,
+      pgBand: type === "pg" ? pgBandFor(rank, PG_CATEGORY[pgSel.category] ?? "general") : null,
+      pgCount: type === "pg" && pgData ? predictPg(pgData.latest, pgData.previous, rank, pgSel).length : 0,
       alternatives: type === "ug" && qualified ? ugAlternatives(rank, category) : [],
     };
     setPrediction(p);
@@ -200,37 +209,8 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
   const ugShown = (tab === "all" ? ugFiltered : ugFiltered.filter((c) => c.chance === tab))
     .slice().sort((a, b) => Number(a.course === "BDS") - Number(b.course === "BDS"));
 
-  // PG: one card per college with its branches.
-  const pgColleges = (() => {
-    if (type !== "pg" || !prediction) return [];
-    const m = new Map<number, Prediction[]>();
-    for (const p of prediction.matches) {
-      if (!m.has(p.college)) m.set(p.college, []);
-      m.get(p.college)!.push(p);
-    }
-    return [...m.entries()].map(([college, branches]) => ({ college, branches }));
-  })();
-  const pgWithTab = pgColleges
-    .map((c) => ({ ...c, branches: tab === "all" ? c.branches : c.branches.filter((b) => b.chance === tab) }))
-    .filter((c) => c.branches.length > 0);
-  const pgCounts = Object.fromEntries(
-    CHANCES.map((ch) => [ch, pgColleges.filter((c) => c.branches.some((b) => b.chance === ch)).length]),
-  ) as Record<Chance, number>;
-  const branchSummary = (() => {
-    const m = new Map<string, Prediction[]>();
-    for (const p of prediction?.matches ?? []) {
-      const k = `${p.course} (${p.degree})`;
-      if (!m.has(k)) m.set(k, []);
-      m.get(k)!.push(p);
-    }
-    return [...m.entries()].map(([branch, list]) => {
-      const pick = list.find((x) => x.chance === "Safe" || x.chance === "Moderate") ?? list[0];
-      return { branch, chance: pick.chance, colleges: new Set(list.map((x) => x.college)).size, bestCollege: nameOf(pick.college) };
-    }).sort((a, b) => CHANCES.indexOf(a.chance) - CHANCES.indexOf(b.chance) || b.colleges - a.colleges).slice(0, 18);
-  })();
-
-  const counts = type === "ug" ? ugCounts : pgCounts;
-  const totalCount = type === "ug" ? ugFiltered.length : pgColleges.length;
+  const counts = ugCounts;
+  const totalCount = ugFiltered.length;
   const anyMatch = prediction?.matches.length ?? 0;
   const listLimit = showAll ? Infinity : 12;
 
@@ -328,6 +308,10 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
                   )}
                 </div>
 
+                {type === "pg" ? (
+                  <PgSelectionFields data={pgData} value={pgSel} onChange={setPgSel} />
+                ) : (
+                  <>
                 {/* Category */}
                 <div className="mb-5">
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Category</label>
@@ -374,6 +358,9 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
                   )}
                 </div>
 
+                  </>
+                )}
+
                 <button
                   // Details are asked once; later predictions go straight to results.
                   onClick={() => (detailsValid ? handlePredict() : setStep(2))}
@@ -383,7 +370,7 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
                   <TrendingUp className="w-5 h-5" />
                   Predict My {type === "ug" ? "MBBS / BDS" : "MD / MS"} Colleges
                 </button>
-                <p className="text-[11px] text-gray-400 text-center mt-3">100% free · Official MCC {type === "ug" ? "2024–2026" : "2023–2025"} closing ranks</p>
+                <p className="text-[11px] text-gray-400 text-center mt-3">100% free · {type === "ug" ? "Official MCC 2024–2026 closing ranks" : "AIQ & state counselling closing ranks 2024–2025"}</p>
               </>
             ) : (
               <>
@@ -473,6 +460,8 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
                 <li>B.Sc Nursing, Physiotherapy or allied health courses that admit without NEET in many states</li>
               </ul>
             </div>
+          ) : type === "pg" ? (
+            pgData && <PgResults data={pgData} rank={prediction.rank} selection={pgSel} />
           ) : (
             <>
               <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
@@ -577,69 +566,12 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
                 )
               )}
 
-              {/* PG: branches + colleges */}
-              {type === "pg" && (
-                pgColleges.length > 0 ? (
-                  <>
-                    {tab === "all" && branchSummary.length > 0 && (
-                      <div className="mb-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-3">Branches you can get</h3>
-                        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                          {branchSummary.map((b) => (
-                            <div key={b.branch} className="flex items-center justify-between gap-2 bg-white border border-gray-100 rounded-xl px-3 py-2">
-                              <div className="min-w-0">
-                                <p className="text-sm font-semibold text-gray-900">{b.branch}</p>
-                                <p className="text-[11px] text-gray-500 truncate">
-                                  {b.bestCollege}{b.colleges > 1 ? ` +${b.colleges - 1} more` : ""}
-                                </p>
-                              </div>
-                              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${chanceMeta[b.chance].pill}`}>{b.chance}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div className="grid md:grid-cols-2 gap-3 mb-4">
-                      {pgWithTab.slice(0, listLimit).map((c) => (
-                        <div key={c.college} className="bg-white border border-gray-100 rounded-2xl p-4 shadow-sm">
-                          <div className="flex items-start gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                              <GraduationCap className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <div className="min-w-0">
-                              <Link href={`/neet-pg/colleges/${collegeById.get(c.college)?.slug ?? ""}`} className="font-bold text-gray-900 text-sm hover:text-blue-700">{nameOf(c.college)}</Link>
-                              <p className="text-xs text-gray-500">{collegeById.get(c.college)?.state ?? ""} · {(collegeById.get(c.college) as PgCollege | undefined)?.dnb ? "DNB hospital" : "Medical college"}</p>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {c.branches.slice(0, 8).map((b) => (
-                              <span key={`${b.course}|${b.degree}|${b.quota}`} title={`${QUOTA_LABEL[b.quota] ?? "State quota (est.)"} · closing ${fmt(b.closing)}`} className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border ${chanceMeta[b.chance].pill}`}>
-                                {b.course}{b.degree !== "MD" && b.degree !== "MS" ? ` (${b.degree})` : ""} · {b.chance}
-                              </span>
-                            ))}
-                            {c.branches.length > 8 && <span className="text-[11px] text-gray-500 px-2 py-0.5">+{c.branches.length - 8} more</span>}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  prediction.pgBand && (
-                    <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 md:p-6 mb-6">
-                      <h3 className="text-lg font-bold text-gray-900 mb-3">{prediction.pgBand.title}</h3>
-                      <p className="text-sm text-gray-700 mb-2"><strong>Likely branches:</strong> {prediction.pgBand.branches}</p>
-                      <p className="text-sm text-gray-700"><strong>Where:</strong> {prediction.pgBand.where}</p>
-                    </div>
-                  )
-                )
-              )}
-
-              {!showAll && (type === "ug" ? ugShown.length : pgWithTab.length) > 12 && (
+              {!showAll && ugShown.length > 12 && (
                 <button
                   onClick={() => setShowAll(true)}
                   className="mb-6 w-full text-sm font-semibold text-blue-700 border border-blue-200 bg-white rounded-xl py-2.5 hover:bg-blue-50"
                 >
-                  Show all {type === "ug" ? ugShown.length : pgWithTab.length} colleges
+                  Show all {ugShown.length} colleges
                 </button>
               )}
 
@@ -657,7 +589,9 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
           <div className="flex items-start gap-2 text-xs text-gray-500 mb-8">
             <Info className="w-4 h-4 shrink-0 mt-0.5" />
             <p>
-              Based on official MCC {latestYear} closing ranks (rounds 1–3) for open seats and your category{quota === "state" ? "; state-quota ranks are estimated from the same colleges' AIQ closing ranks" : ""}.{" "}
+              {type === "pg"
+                ? <>Based on {pgData?.latestYear} AIQ and state counselling closing ranks for your quota and category (rounds you pick, R1–R3 by default); reserved categories also see open seats.{" "}</>
+                : <>Based on official MCC {latestYear} closing ranks (rounds 1–3) for open seats and your category{quota === "state" ? "; state-quota ranks are estimated from the same colleges' AIQ closing ranks" : ""}.{" "}</>}
               <strong>Safe</strong> = well inside last year&apos;s cutoff, <strong>Moderate</strong> = close to it,{" "}
               <strong>Risky</strong> = possible in later rounds, <strong>Dream</strong> = needs cutoffs to move a lot.
               Talk to a counsellor before choice filling.

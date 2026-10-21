@@ -7,6 +7,7 @@ export const hubLinks = (slug: ExamSlug) => [
   { href: `/${slug}`, label: "Overview" },
   { href: `/predictor?exam=${slug === "neet-ug" ? "ug" : "pg"}`, label: "College Predictor" },
   { href: `/${slug}/colleges`, label: "College Info" },
+  ...(slug === "neet-pg" ? [{ href: `/${slug}/institutions`, label: "Institutions & Fees" }] : []),
   { href: `/${slug}/cutoffs`, label: "Cut-offs" },
   { href: `/${slug}/compare`, label: "Cut-off Comparison" },
   { href: `/${slug}/choice-filling`, label: "Choice Filling Advisor" },
@@ -24,7 +25,7 @@ export default function HubNav({ slug }: { slug: ExamSlug }) {
           {(["neet-ug", "neet-pg"] as ExamSlug[]).map((s) => (
             <Link
               key={s}
-              href={pathname.replace(`/${slug}`, `/${s}`)}
+              href={pathname.endsWith("/institutions") && s === "neet-ug" ? "/neet-ug/colleges" : pathname.replace(`/${slug}`, `/${s}`)}
               className={`px-3 py-1.5 rounded-md text-xs font-bold ${s === slug ? "bg-white text-blue-900" : "text-white/80 hover:text-white"}`}
             >
               {s === "neet-ug" ? "NEET UG" : "NEET PG"}
