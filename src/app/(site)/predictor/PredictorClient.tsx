@@ -19,6 +19,8 @@ import {
 import { useColleges, useCutoffs } from "@/lib/neet/useNeetData";
 import { PgResults, PgSelectionFields, usePgData } from "@/components/neet/PgPredictor";
 import { EMPTY_SELECTION, predictPg, selectionComplete, type PgSelection } from "@/lib/neet/pgPredict";
+import { usePredictorAccess } from "@/lib/neet/usePredictorAccess";
+import PredictorAccessGate from "@/components/neet/PredictorAccessGate";
 
 type Step = 1 | 2 | 3;
 type UgFilter = "all" | "govt" | "bds" | "deemed";
@@ -95,6 +97,9 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
   const [newsLoading, setNewsLoading] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
+  // Full results stay behind a one-time Razorpay payment; everyone can still see the
+  // rank/counts and the lead is still saved either way (see saveLead below).
+  const { status: access, supabase: predictorSupabase, refresh: refreshAccess } = usePredictorAccess();
 
   // UG: official MCC closing ranks (latest year + the year before). PG: institution cutoffs incl. state quotas.
   const latestYear = EXAM[type].latestYear;
@@ -461,7 +466,17 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
               </ul>
             </div>
           ) : type === "pg" ? (
-            pgData && <PgResults data={pgData} rank={prediction.rank} selection={pgSel} />
+            pgData && (access === "unlocked" ? (
+              <PgResults data={pgData} rank={prediction.rank} selection={pgSel} />
+            ) : (
+              <PredictorAccessGate
+                status={access}
+                supabase={predictorSupabase}
+                exam="pg"
+                onUnlocked={refreshAccess}
+                teaser={`${prediction.pgCount} college-branch option${prediction.pgCount === 1 ? "" : "s"} found for your rank`}
+              />
+            ))
           ) : (
             <>
               <div className="flex flex-wrap items-end justify-between gap-3 mb-4">
@@ -517,8 +532,16 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
                 })}
               </div>}
 
-              {/* UG list */}
-              {type === "ug" && (
+              {/* UG list — gated behind sign-up + one-time payment once there's something to unlock */}
+              {type === "ug" && access !== "unlocked" && totalCount > 0 ? (
+                <PredictorAccessGate
+                  status={access}
+                  supabase={predictorSupabase}
+                  exam="ug"
+                  onUnlocked={refreshAccess}
+                  teaser={`${totalCount} college${totalCount === 1 ? "" : "s"} found for your rank`}
+                />
+              ) : type === "ug" && (
                 ugShown.length > 0 ? (
                   <div className="grid md:grid-cols-2 gap-3 mb-4">
                     {ugShown.slice(0, listLimit).map((c) => (
@@ -566,7 +589,7 @@ export default function PredictorClient({ initialExam }: { initialExam: NeetType
                 )
               )}
 
-              {!showAll && ugShown.length > 12 && (
+              {access === "unlocked" && !showAll && ugShown.length > 12 && (
                 <button
                   onClick={() => setShowAll(true)}
                   className="mb-6 w-full text-sm font-semibold text-blue-700 border border-blue-200 bg-white rounded-xl py-2.5 hover:bg-blue-50"
