@@ -134,7 +134,10 @@ export default function InstitutionsExplorer() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div><h2 className="text-xl font-bold text-slate-900">Institutions</h2><p className="text-sm text-slate-500 mt-1">Browse all medical institutions with detailed cutoff data.</p></div>
-        <Link href="/neet-pg/cutoffs" className="text-sm font-semibold text-blue-700 hover:underline">Explore official MCC cutoffs →</Link>
+        <div className="flex flex-col items-end gap-1">
+          <Link href="/neet-pg/institutions/rajasthan-fees-2026" className="text-sm font-semibold text-blue-700 hover:underline">New: Rajasthan 2026 official fee structure →</Link>
+          <Link href="/neet-pg/cutoffs" className="text-sm font-semibold text-blue-700 hover:underline">Explore official MCC cutoffs →</Link>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
